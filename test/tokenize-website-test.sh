@@ -7,5 +7,6 @@ for url in $urls; do
   echo "Get tokens from '$url'"
   wget -O - "$url" |
     "$BASE"/../bin/htmlstriptags |
+    "$BASE"/../bin/htmlentitiesdecode |
     "$BASE"/../bin/tokenizer -d $' .,;:()[]{}\\/-=<>"+?!%_|$&@\r\n\t\v\f'
 done
