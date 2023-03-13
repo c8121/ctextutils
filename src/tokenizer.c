@@ -26,20 +26,26 @@
 #include "submodules/cutils/src/cli_args.h"
 
 #define DEFAULT_MAX_TOKEN_LENGTH 128
+#define DEFAULT_TOKEN_SEPARATOR " ";
+
+char *__tokenizer_separator = DEFAULT_TOKEN_SEPARATOR;
+int __tokenizer_token_count = 0;
 
 /**
  *
  */
 void usage_message(int argc, char *argv[]) {
     printf("USAGE:\n");
-    printf("%s [-help] [-d <delimiters>] [-m <max token length>]\n", argv[0]);
+    printf("%s [-help] [-d <delimiters>] [-m <max token length>] [-s <separator>]\n", argv[0]);
 }
 
 /**
  *
  */
 void print_token(const char *token) {
-    printf("%s ", token);
+    if (__tokenizer_token_count++ > 0)
+        printf("%s", __tokenizer_separator);
+    printf("%s", token);
 }
 
 /**
@@ -64,5 +70,11 @@ int main(int argc, char *argv[]) {
         max_token_length = atoi(argv[opt]);
     }
 
+    opt = cli_get_opt_idx("-s", argc, argv);
+    if (opt > 0) {
+        __tokenizer_separator = argv[opt];
+    }
+
     tokenize(stdin, delimiters, max_token_length, &print_token);
+    printf("\n");
 }
