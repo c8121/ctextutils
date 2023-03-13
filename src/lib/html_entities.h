@@ -27,16 +27,18 @@
 
 #include "html_entities_config.h"
 
-#define BUF_SIZE 10
+#define DECODE_BUF_SIZE 10
 
 /**
  * Allow # 0-9 A-Z a-z
  * @return 1 if valid, 0 otherwise
  */
-int is_valid_html_entity_name(char *name) {
-    char *p = name;
+int is_valid_html_entity_name(const char *name) {
+    char *p = (char *) name;
     while (*p) {
-        if (*p >= 65 && *p <= 90) //A-Z
+        if (*p == 35)
+            p++;
+        else if (*p >= 65 && *p <= 90) //A-Z
             p++;
         else if (*p >= 97 && *p <= 122) //a-z
             p++;
@@ -52,7 +54,7 @@ int is_valid_html_entity_name(char *name) {
  * Take a entity name and return decoded UTF-8.
  * Parameter name can be a named entity
  */
-const char *html_named_entity_get(char *name) {
+const char *html_named_entity_get(const char *name) {
 
     for (int i = 0; *html_named_entities[i] != '\0'; i += 2) {
         if (strcmp(name, html_named_entities[i]) == 0)
@@ -68,9 +70,13 @@ const char *html_named_entity_get(char *name) {
  * Take a entity name and return decoded UTF-8.
  * Parameter name can be a named entity or a number like #NNN #xNNN
  *
+ * @return decoded entity, NULL on fail.
  * Caller must free result
  */
-char *html_entity_get(char *name) {
+char *html_entity_get(const char *name) {
+
+    if (!is_valid_html_entity_name(name))
+        return NULL;
 
     char *dec = malloc(5);
     *dec = '\0';
@@ -117,87 +123,41 @@ char *html_entity_get(char *name) {
 }
 
 /**
- * TODO: writes to stream, not very useful
- */
-void html_entity_decode(char *s, FILE *out) {
-
-    char *i = s;
-    char *p = strchr(s, '&');
-    char *e;
-
-    char *name = NULL;
-
-    while (p != NULL) {
-
-        fprintf(out, "%.*s", (int) (p - i), i);
-
-        e = strchr(p, ';');
-        if (e == NULL) {
-            //terminator missing
-            fprintf(out, "%c", *p);
-            i = p + 1;
-
-        } else {
-
-            if (name != NULL)
-                free(name);
-            name = malloc(e - p);
-            snprintf(name, e - p, "%.*s%c", (int) (e - p - 1), p + 1, '\0');
-            i = e + 1;
-
-            if (!is_valid_html_entity_name(name)) {
-                //invalid name, leave it as it is
-                fprintf(out, "%c", *p);
-                i = p + 1;
-            } else {
-                char *dec = html_entity_get(name);
-                fprintf(out, "%s", dec);
-                free(dec);
-            }
-        }
-
-        p = i;
-        p = strchr(p, '&');
-    }
-
-    if (*i)
-        fprintf(out, "%s", i);
-
-    if (name != NULL)
-        free(name);
-}
-
-/**
  *
  */
 void html_entities_decode(FILE *in, FILE *out) {
 
-    char buf[BUF_SIZE];
+    char buf[DECODE_BUF_SIZE];
     char *p = NULL;
     int c;
+
+    char *dec = NULL;
 
     while ((c = fgetc(in)) != EOF) {
 
         if (c == '&') {
             if (p == NULL)
                 p = buf;
-            *(p++) = c;
         } else if (c == ';' && p != NULL) {
-            *(p++) = c;
             *p = '\0';
-            html_entity_decode(buf, out);
+            dec = html_entity_get(buf);
+            if (dec != NULL) {
+                fprintf(out, "%s", dec);
+                free(dec);
+            } else {
+                fprintf(out, "%c%s%c", '&', buf, ';');
+            }
             p = NULL;
         } else if (p == NULL) {
             fprintf(out, "%c", c);
         } else {
             *(p++) = c;
-            if (p - buf >= BUF_SIZE) {
+            if (p - buf >= DECODE_BUF_SIZE) {
                 *p = '\0';
                 fprintf(out, "[\"%s\"]", buf);
                 p = NULL;
             }
         }
-
     }
 }
 
