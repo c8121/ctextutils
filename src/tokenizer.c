@@ -18,16 +18,21 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <sysexits.h>
 
 #include "lib/tokenizer.h"
 
+#include "submodules/cutils/src/cli_args.h"
+
+#define DEFAULT_MAX_TOKEN_LENGTH 128
 
 /**
  *
  */
 void usage_message(int argc, char *argv[]) {
     printf("USAGE:\n");
-    printf("TODO: Describe %s\n", argv[0]);
+    printf("%s [-help] [-d <delimiters>] [-m <max token length>]\n", argv[0]);
 }
 
 /**
@@ -41,5 +46,23 @@ void print_token(const char *token) {
  * 
  */
 int main(int argc, char *argv[]) {
-    tokenize(stdin, TOKENIZER_DEFAULT_DELIMITERS, 3, &print_token);
+
+    if (cli_has_opt("-help", argc, argv)) {
+        usage_message(argc, argv);
+        return EX_OK;
+    }
+
+    char *delimiters = TOKENIZER_DEFAULT_DELIMITERS;
+    int opt = cli_get_opt_idx("-d", argc, argv);
+    if (opt > 0) {
+        delimiters = argv[opt];
+    }
+
+    int max_token_length = DEFAULT_MAX_TOKEN_LENGTH;
+    opt = cli_get_opt_idx("-m", argc, argv);
+    if (opt > 0) {
+        max_token_length = atoi(argv[opt]);
+    }
+
+    tokenize(stdin, delimiters, max_token_length, &print_token);
 }

@@ -23,6 +23,9 @@
 #define TOKENIZER_DEFAULT_DELIMITERS " \r\n\t\f"
 
 #include <stdio.h>
+#include <sysexits.h>
+
+#include "../submodules/cutils/src/util.h"
 
 /**
  *
@@ -42,6 +45,10 @@ int is_delimiter(int c, const char *delimiters) {
  */
 void tokenize(FILE *input, const char *delimiters, size_t max_token_length,
               void (*next_token_function)(const char *token)) {
+
+    if (max_token_length < 1)
+        fail(EX_USAGE, "Token length < 1");
+
 
     char token[max_token_length];
     char *p = token;
