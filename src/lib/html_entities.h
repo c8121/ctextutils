@@ -154,7 +154,7 @@ void html_entities_decode(FILE *in, FILE *out) {
             *(p++) = c;
             if (p - buf >= DECODE_BUF_SIZE) {
                 *p = '\0';
-                fprintf(out, "[\"%s\"]", buf);
+                fprintf(out, "%c%s", '&', buf);
                 p = NULL;
             }
         }
