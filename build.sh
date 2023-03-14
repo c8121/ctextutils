@@ -19,3 +19,4 @@ cd "$BASE"
 gcc -Wall -o "$binDir/tokenizer" "$sourceDir/tokenizer.c"
 gcc -Wall -o "$binDir/htmlstriptags" "$sourceDir/htmlstriptags.c"
 gcc -Wall -o "$binDir/htmlentitiesdecode" "$sourceDir/htmlentitiesdecode.c"
+gcc -Wall -o "$binDir/indexer" "$sourceDir/indexer.c" -lmysqlclient
