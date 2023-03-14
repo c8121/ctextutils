@@ -11,6 +11,13 @@
  GRANT ALL PRIVILEGES ON fulltext_index.* to 'index'@'localhost';
 */
 
+CREATE TABLE `DOCUMENT`
+(
+    `ID` int(11) NOT NULL,
+    PRIMARY KEY (`ID`)
+) ENGINE MyISAM
+  DEFAULT CHARSET = utf8mb4;
+
 CREATE TABLE `WORD`
 (
     `ID`    int(11) NOT NULL AUTO_INCREMENT,

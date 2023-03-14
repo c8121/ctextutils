@@ -38,7 +38,7 @@ void usage_message(int argc, char *argv[]) {
  *
  */
 void add_word(const char *word) {
-    indexer_add_word(doc_id, word);
+    fulltext_add_word(doc_id, word);
 }
 
 /**
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
     if (doc_id < 1)
         fail(EX_USAGE, "Invalid document id (<1)");
 
-    if (!indexer_db_connect(
+    if (!fulltext_db_connect(
             "localhost",
             "Test",
             "Test",
@@ -67,5 +67,5 @@ int main(int argc, char *argv[]) {
 
     tokenize(stdin, TOKENIZER_DEFAULT_DELIMITERS, INDEXER_MAX_LENGTH_WORD, &add_word);
 
-    indexer_db_disconnect();
+    fulltext_db_disconnect();
 }

@@ -17,35 +17,41 @@
  * Author: christian c8121 de
  */
 
-#ifndef CTEXTUTILS_INDEXER
-#define CTEXTUTILS_INDEXER
-
-#define INDEXER_MAX_LENGTH_WORD 254
-
 #include <stdio.h>
 #include <sysexits.h>
 
-int fulltext_db_connect(const char *host, const char *user, const char *pwd,
-                        const char *db, unsigned int port);
-
-void fulltext_db_disconnect();
-
-int fulltext_db_add_word(unsigned long doc_id, const char *word);
-
-unsigned long *fulltext_db_get_documents(int max, int word_count, const char *words[]);
+#include "lib/fulltext_index.h"
+#include "lib/fulltext_index_mysql.h"
 
 /**
  *
  */
-int fulltext_add_word(unsigned long doc_id, const char *word) {
-    return fulltext_db_add_word(doc_id, word);
+void usage_message(int argc, char *argv[]) {
+    printf("USAGE:\n");
+    printf("%s <word> [<word...>]\n", argv[0]);
 }
 
 /**
- *
+ * 
  */
-unsigned long *fulltext_get_documents(int max, int word_count, const char *words[]) {
-    return fulltext_db_get_documents(max, word_count, words);
-}
+int main(int argc, char *argv[]) {
 
-#endif //CTEXTUTILS_INDEXER
+    if (argc < 2) {
+        usage_message(argc, argv);
+        return EX_USAGE;
+    }
+
+    if (!fulltext_db_connect(
+            "localhost",
+            "Test",
+            "Test",
+            "Test",
+            3306
+    )) {
+        return 0;
+    }
+
+    fulltext_get_documents(100, argc - 1, (const char **) &argv[1]);
+
+    fulltext_db_disconnect();
+}
