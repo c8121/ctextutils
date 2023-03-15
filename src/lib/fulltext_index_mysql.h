@@ -34,57 +34,6 @@
 
 void *mysql = NULL;
 
-struct __mysql_id_list {
-    unsigned long id;
-    unsigned long count;
-    double score;
-    struct __mysql_id_list *next;
-};
-
-/**
- *
- */
-struct __mysql_id_list *__id_list_append(struct __mysql_id_list *item, unsigned long id) {
-
-    struct __mysql_id_list *ret = malloc(sizeof(struct __mysql_id_list));
-    ret->id = id;
-    ret->count = 0;
-    ret->score = 0;
-    ret->next = NULL;
-
-    if (item != NULL)
-        item->next = ret;
-
-    return ret;
-}
-
-/**
- *
- */
-struct __mysql_id_list *__id_list_get(struct __mysql_id_list *item, unsigned long id) {
-    struct __mysql_id_list *curr = item;
-    while (curr != NULL) {
-        if (curr->id == id)
-            return curr;
-        curr = curr->next;
-    }
-    return NULL;
-}
-
-
-/**
- *
- */
-void __id_list_free(struct __mysql_id_list *item) {
-    struct __mysql_id_list *curr = item;
-    struct __mysql_id_list *next = NULL;
-    while (curr != NULL) {
-        next = curr->next;
-        free(curr);
-        curr = next;
-    }
-}
-
 
 struct __mysql_query {
     const char *get_sql;
@@ -409,7 +358,7 @@ int fulltext_db_add_word(unsigned long doc_id, const char *word) {
 /**
  *
  */
-struct __mysql_id_list *get_word_ids(const char *word) {
+struct fulltext_id_list *get_word_ids(const char *word) {
 
     if (!mysql_util_prepare_stmt(mysql, &__mysql_find_word, "SELECT ID, COUNT FROM WORD WHERE WORD LIKE ?;"))
         fail(EX_IOERR, "Failed to prepare statement");
@@ -432,8 +381,8 @@ struct __mysql_id_list *get_word_ids(const char *word) {
     if (!mysql_util_store_result(mysql, __mysql_find_word, p, r))
         fail(EX_IOERR, "Failed to store result");
 
-    struct __mysql_id_list *ret = NULL;
-    struct __mysql_id_list *curr = NULL;
+    struct fulltext_id_list *ret = NULL;
+    struct fulltext_id_list *curr = NULL;
 
     int status;
     while (1) {
@@ -441,7 +390,7 @@ struct __mysql_id_list *get_word_ids(const char *word) {
         if (status == 1 || status == MYSQL_NO_DATA)
             break;
 
-        curr = __id_list_append(curr, id);
+        curr = fulltext_id_list_append(curr, id);
         if (ret == NULL)
             ret = curr;
 
@@ -458,7 +407,7 @@ struct __mysql_id_list *get_word_ids(const char *word) {
 /**
  *
  */
-struct __mysql_id_list *get_document_ids(unsigned long word_id) {
+struct fulltext_id_list *get_document_ids(unsigned long word_id) {
 
     if (!mysql_util_prepare_stmt(mysql, &__mysql_find_document,
                                  "SELECT DOCUMENT, COUNT FROM DOCUMENT_WORD WHERE WORD = ?;"))
@@ -477,8 +426,8 @@ struct __mysql_id_list *get_document_ids(unsigned long word_id) {
     if (!mysql_util_store_result(mysql, __mysql_find_document, p, r))
         fail(EX_IOERR, "Failed to store result");
 
-    struct __mysql_id_list *ret = NULL;
-    struct __mysql_id_list *curr = NULL;
+    struct fulltext_id_list *ret = NULL;
+    struct fulltext_id_list *curr = NULL;
 
     int status;
     while (1) {
@@ -486,7 +435,7 @@ struct __mysql_id_list *get_document_ids(unsigned long word_id) {
         if (status == 1 || status == MYSQL_NO_DATA)
             break;
 
-        curr = __id_list_append(curr, id);
+        curr = fulltext_id_list_append(curr, id);
         if (ret == NULL)
             ret = curr;
 
@@ -503,35 +452,34 @@ struct __mysql_id_list *get_document_ids(unsigned long word_id) {
 /**
  *
  */
-unsigned long *fulltext_db_get_documents(int max, int word_count, const char *words[]) {
+struct fulltext_id_list *fulltext_db_get_documents(int word_count, const char *words[]) {
 
-    struct __mysql_id_list *result_docs = NULL;
-    struct __mysql_id_list *last = NULL;
+    struct fulltext_id_list *result_docs = NULL;
+    struct fulltext_id_list *last = NULL;
 
     double tf_weight = 1;
     double dl_weight = 0.5;
     unsigned long doc_count = __mysql_get_document_count();
 
     for (int i = 0; i < word_count; i++) {
-        printf("%s\n", words[i]);
 
-        struct __mysql_id_list *word_ids = get_word_ids(words[i]);
-        struct __mysql_id_list *curr_word = word_ids;
+        struct fulltext_id_list *word_ids = get_word_ids(words[i]);
+        struct fulltext_id_list *curr_word = word_ids;
         while (curr_word != NULL) {
 
             double idf = log((double) doc_count / (double) (curr_word->count > 0 ? curr_word->count : 1));
 
-            struct __mysql_id_list *doc_ids = get_document_ids(curr_word->id);
-            struct __mysql_id_list *curr_doc = doc_ids;
+            struct fulltext_id_list *doc_ids = get_document_ids(curr_word->id);
+            struct fulltext_id_list *curr_doc = doc_ids;
             while (curr_doc != NULL) {
 
                 double num = (tf_weight + 1) * curr_doc->count;
                 double denom = tf_weight * ((1 - dl_weight) + dl_weight) + curr_doc->count;
                 curr_doc->score = idf * (num / denom);
 
-                struct __mysql_id_list *add_doc = __id_list_get(result_docs, curr_doc->id);
+                struct fulltext_id_list *add_doc = fulltext_id_list_get(result_docs, curr_doc->id);
                 if (add_doc == NULL) {
-                    add_doc = __id_list_append(last, curr_doc->id);
+                    add_doc = fulltext_id_list_append(last, curr_doc->id);
                     if (result_docs == NULL)
                         result_docs = add_doc;
                     last = add_doc;
@@ -542,21 +490,15 @@ unsigned long *fulltext_db_get_documents(int max, int word_count, const char *wo
 
                 curr_doc = curr_doc->next;
             }
-            __id_list_free(doc_ids);
+            fulltext_id_list_free(doc_ids);
 
             curr_word = curr_word->next;
         }
 
-        __id_list_free(word_ids);
+        fulltext_id_list_free(word_ids);
     }
 
-    struct __mysql_id_list *curr = result_docs;
-    while (curr != NULL) {
-        printf("%li (%f)\n", curr->id, curr->score);
-        curr = curr->next;
-    }
-
-    return NULL;
+    return fulltext_id_list_sort(result_docs);
 }
 
 

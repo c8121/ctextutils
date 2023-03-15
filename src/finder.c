@@ -51,7 +51,12 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    fulltext_get_documents(100, argc - 1, (const char **) &argv[1]);
+    struct fulltext_id_list *result = fulltext_get_documents(argc - 1, (const char **) &argv[1]);
+    struct fulltext_id_list *curr = result;
+    while (curr != NULL) {
+        printf("%li, %f\n", curr->id, curr->score);
+        curr = curr->next;
+    }
 
     fulltext_db_disconnect();
 }
