@@ -55,7 +55,7 @@ void tokenize(FILE *input, const char *delimiters, size_t max_token_length,
 
     int c;
     while ((c = fgetc(input)) != EOF) {
-        if (is_delimiter(c, delimiters)) {
+        if (c == 0 || is_delimiter(c, delimiters)) {
             if (p - token > 0) {
                 *p = '\0';
                 next_token_function(token);
