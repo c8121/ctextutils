@@ -511,6 +511,8 @@ int fulltext_db_connect(const char *host, const char *user, const char *pwd,
     if (mysql != NULL)
         return 0;
 
+    //fprintf(stderr, "Connect: %s@%s:%i, db=%s\n", user, host, port, db);
+
     mysql = mysql_init(NULL);
     if (mysql == NULL)
         fprintf(stderr, "Init failed: %s", mysql_error(mysql));

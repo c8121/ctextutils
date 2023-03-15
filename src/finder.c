@@ -23,6 +23,21 @@
 #include "lib/fulltext_index.h"
 #include "lib/fulltext_index_mysql.h"
 
+#include "submodules/cutils/src/db_util.h"
+#include "submodules/cutils/src/config_file.h"
+
+#define DEFAULT_CONFIG_FILE "./config/default-config"
+
+struct db_config db;
+
+/**
+ *
+ */
+void apply_config(char *section_name, char *name, char *value) {
+    apply_db_config(&db, "mysql", section_name, name, value);
+}
+
+
 /**
  *
  */
@@ -41,15 +56,13 @@ int main(int argc, char *argv[]) {
         return EX_USAGE;
     }
 
-    if (!fulltext_db_connect(
-            "localhost",
-            "Test",
-            "Test",
-            "Test",
-            3306
-    )) {
+    memset(&db, 0, sizeof(struct db_config));
+    read_config_file_from_cli_arg("-config", argc, argv, 1, DEFAULT_CONFIG_FILE,
+                                  &apply_config);
+
+    if (!fulltext_db_connect(db.host, db.user, db.password, db.db, db.port))
         return 0;
-    }
+    memset(&db, 0, sizeof(struct db_config));
 
     struct fulltext_id_list *result = fulltext_get_documents(argc - 1, (const char **) &argv[1]);
     struct fulltext_id_list *curr = result;

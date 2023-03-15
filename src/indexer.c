@@ -24,7 +24,21 @@
 #include "lib/fulltext_index_mysql.h"
 #include "lib/tokenizer.h"
 
+#include "submodules/cutils/src/db_util.h"
+#include "submodules/cutils/src/config_file.h"
+
+#define DEFAULT_CONFIG_FILE "./config/default-config"
+
 unsigned long doc_id = 0;
+
+struct db_config db;
+
+/**
+ *
+ */
+void apply_config(char *section_name, char *name, char *value) {
+    apply_db_config(&db, "mysql", section_name, name, value);
+}
 
 /**
  *
@@ -55,15 +69,13 @@ int main(int argc, char *argv[]) {
     if (doc_id < 1)
         fail(EX_USAGE, "Invalid document id (<1)");
 
-    if (!fulltext_db_connect(
-            "localhost",
-            "Test",
-            "Test",
-            "Test",
-            3306
-    )) {
+    memset(&db, 0, sizeof(struct db_config));
+    read_config_file_from_cli_arg("-config", argc, argv, 1, DEFAULT_CONFIG_FILE,
+                                  &apply_config);
+
+    if (!fulltext_db_connect(db.host, db.user, db.password, db.db, db.port))
         return 0;
-    }
+    memset(&db, 0, sizeof(struct db_config));
 
     tokenize(stdin, TOKENIZER_DEFAULT_DELIMITERS, INDEXER_MAX_LENGTH_WORD, &add_word);
 
