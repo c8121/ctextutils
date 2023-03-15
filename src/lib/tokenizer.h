@@ -43,6 +43,15 @@ int is_delimiter(int c, const char *delimiters) {
 /**
  *
  */
+int is_printable(int c) {
+    if (c > 31)
+        return 1;
+    return 0;
+}
+
+/**
+ *
+ */
 void tokenize(FILE *input, const char *delimiters, size_t max_token_length,
               void (*next_token_function)(const char *token)) {
 
@@ -50,12 +59,13 @@ void tokenize(FILE *input, const char *delimiters, size_t max_token_length,
         fail(EX_USAGE, "Token length < 1");
 
 
-    char token[max_token_length];
+    char token[max_token_length + 1];
     char *p = token;
 
     int c;
     while ((c = fgetc(input)) != EOF) {
-        if (c == 0 || is_delimiter(c, delimiters)) {
+
+        if (!is_printable(c) || is_delimiter(c, delimiters)) {
             if (p - token > 0) {
                 *p = '\0';
                 next_token_function(token);
@@ -74,7 +84,7 @@ void tokenize(FILE *input, const char *delimiters, size_t max_token_length,
 
     if (p - token > 0) {
         *p = '\0';
-        next_token_function(token);
+        //next_token_function(token);
     }
 }
 

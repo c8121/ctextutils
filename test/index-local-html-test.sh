@@ -20,12 +20,12 @@ function index_document() {
   fi
   file=$(realpath "$file")
 
-  echo "Add $file"
+  echo "Add $file (id=$doc_id)"
   cat "$file" |
-    "$BASE"/../bin/htmlstriptags |
-    "$BASE"/../bin/htmlentitiesdecode |
-    "$BASE"/../bin/tokenizer -d $' .,;:()[]{}\\/-=<>"+?!%_|$&@\r\n\t\v\f' |
-    "$BASE"/../bin/indexer "$doc_id"
+    #"$BASE"/../bin/htmlstriptags |
+    #"$BASE"/../bin/htmlentitiesdecode |
+    "$BASE"/../bin/tokenizer -d $' .,;:()[]{}\\/-=<>"+?!%_|$&@\r\n\t\v\f' #|
+    #"$BASE"/../bin/indexer "$doc_id"
 
   doc_id=$(expr $doc_id + 1)
 }
