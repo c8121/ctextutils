@@ -4,16 +4,23 @@ BASE=$(realpath "$(dirname "$0")")
 
 source="$1"
 if [ "$source" == "" ]; then
-  echo "Usage: $0 <dirname>"
+  echo "Usage: $0 <dirname or filename>"
   exit
 fi
 
 doc_id=1
 
-find "$source" -type f -name "*.htm*" -print0 | while IFS= read -r -d '' file; do
+### Functions ###
+
+function index_document() {
+  file="$1"
+  if [ ! -f "$file" ]; then
+    echo "File not found: $file"
+    return
+  fi
+  file=$(realpath "$file")
 
   echo "Add $file"
-
   cat "$file" |
     "$BASE"/../bin/htmlstriptags |
     "$BASE"/../bin/htmlentitiesdecode |
@@ -21,4 +28,17 @@ find "$source" -type f -name "*.htm*" -print0 | while IFS= read -r -d '' file; d
     "$BASE"/../bin/indexer "$doc_id"
 
   doc_id=$(expr $doc_id + 1)
-done
+}
+
+### Main ###
+
+if [ -d "$source" ]; then
+  find "$source" -type f -name "*.htm*" -print0 | while IFS= read -r -d '' file; do
+    index_document "$file"
+  done
+
+elif [ -f "$source" ]; then
+  index_document "$source"
+else
+  echo "Not found: $source"
+fi
