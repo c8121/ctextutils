@@ -22,7 +22,7 @@ function index_document() {
 
   echo "Add $file (id=$doc_id)"
   "$BASE"/../filter/convert-to-text.sh "$file" |
-    "$BASE"/../bin/tokenizer -d $' .,;:()[]{}\\/-=<>"+*?!%_|$&@\r\n\t\v\f' |
+    "$BASE"/../bin/tokenizer -d $' .,;:()[]{}\\/-=<>"\'+*?!%_|$&@#\r\n\t\v\f' |
     "$BASE"/../bin/indexer "$doc_id"
 
   doc_id=$(expr $doc_id + 1)
