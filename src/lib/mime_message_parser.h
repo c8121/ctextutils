@@ -160,6 +160,7 @@ void __read_mime_part(FILE *in) {
     char *content_type = NULL;
 
     int reading_header = 1;
+    int part_count = -1;
     char *line;
     size_t len;
     while ((line = freadline(in)) != NULL) {
@@ -197,7 +198,8 @@ void __read_mime_part(FILE *in) {
         } else if (is_boundary_end(line, boundary)) {
             printf("END> '%s'", line);
         } else if (is_boundary_next(line, boundary)) {
-            printf("NEXT> '%s'", line);
+            part_count++;
+            printf("NEXT> (%i) '%s'", part_count, line);
         } else {
             printf("BODY> (%s) '%s'", content_type, line);
         }
