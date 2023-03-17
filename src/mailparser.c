@@ -25,6 +25,8 @@
 
 #include "submodules/cutils/src/cli_args.h"
 
+struct mime_header *curr_part_mime_headers = NULL;
+
 /**
  *
  */
@@ -32,6 +34,24 @@ void usage_message(int argc, char *argv[]) {
     printf("USAGE:\n");
     printf("%s\n", argv[0]);
 }
+
+
+/**
+ *
+ */
+void __handle_message_line(struct mime_header *mime_headers, int read_state, const char *line) {
+
+    if (read_state == MIME_MESSAGE_READ_BODY && curr_part_mime_headers != mime_headers) {
+        curr_part_mime_headers = mime_headers;
+        fprintf(stderr, "PART, content-type='%s'\n", get_header_attribute(mime_headers, "content-type", NULL));
+        fprintf(stderr, "      name='%s'\n", get_header_attribute(mime_headers, "content-type", "name"));
+        fprintf(stderr, "      filename='%s'\n", get_header_attribute(mime_headers, "content-disposition", "filename"));
+        fprintf(stderr, "      encoding='%s'\n", get_header_attribute(mime_headers, "Content-Transfer-Encoding", NULL));
+    }
+
+    printf("%s", line);
+}
+
 
 /**
  * 
@@ -43,5 +63,5 @@ int main(int argc, char *argv[]) {
         return EX_OK;
     }
 
-    read_mime_message(stdin);
+    read_mime_message(stdin, &__handle_message_line);
 }

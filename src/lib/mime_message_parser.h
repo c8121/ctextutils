@@ -23,6 +23,8 @@
 //to enable strcasestr(...)
 #define __USE_GNU
 
+#define MIME_MESSAGE_READ_HEADER 1
+#define MIME_MESSAGE_READ_BODY 2
 
 #include <string.h>
 
@@ -33,17 +35,24 @@
 struct mime_header {
     char *name;
     char *value;
+    struct mime_header *next;
 };
 
 /**
  *
  */
 void __mime_header_free(struct mime_header *header) {
-    if (header != NULL) {
-        if (header->name != NULL)
-            free(header->name);
-        if (header->value != NULL)
-            free(header->value);
+    struct mime_header *curr = header;
+    struct mime_header *f;
+    while (curr != NULL) {
+        f = curr;
+        curr = curr->next;
+
+        freenn(f->name);
+        f->name = NULL;
+        freenn(f->value);
+        f->value = NULL;
+        free(f);
     }
 }
 
@@ -54,13 +63,14 @@ void __mime_header_free(struct mime_header *header) {
  *   <name>: <value>
  *      <value>...
  */
-struct mime_header *__read_mime_part_header(struct char_buffer *header) {
+struct mime_header *__read_mime_part_header(struct char_buffer *header, struct mime_header *append_to) {
 
     char *s = char_buffer_copy(header);
     size_t len = strlen(s);
     s[len - 1] = '\0'; //strip newline;
 
     struct mime_header *mime_header = malloc(sizeof(struct mime_header));
+    mime_header->next = NULL;
 
     char *p = strchr(s, ':');
     if (p != NULL) {
@@ -69,50 +79,63 @@ struct mime_header *__read_mime_part_header(struct char_buffer *header) {
         mime_header->value = str_copy(p, len - (p - s));
     } else {
         mime_header->name = str_copy(s, p - s);
+        mime_header->value = NULL;
     }
     free(s);
 
-    printf("HEADER> name='%s', value='%s'\n", mime_header->name, mime_header->value);
+    if (append_to != NULL)
+        append_to->next = mime_header;
+
+    //printf("HEADER> name='%s', value='%s'\n", mime_header->name, mime_header->value);
     return mime_header;
 }
 
 /**
- * Check if given header is content-type header.
- * @return content-type or NULL
+ * Check if given header has given name.
+ * @return header or NULL
  */
-char *__read_mime_part_header_content_type(struct mime_header *header) {
+struct mime_header *__is_mime_part_header(struct mime_header *header, const char *name) {
     if (header == NULL || header->name == NULL || header->value == NULL)
         return NULL;
 
-    if (strcasestr(header->name, "Content-Type") != NULL) {
-        char *p = header->value;
-        char *end = strchr(p, ';');
-        if (end == NULL)
-            for (end = p; !is_whitespace(*end); ++end);
-        char *ret = str_copy(p, end - p);
-        printf("CONTENT-TYPE> '%s'\n", ret);
-        return ret;
+    if (strcasestr(header->name, name) != NULL) {
+        return header;
     }
     return NULL;
 }
 
 /**
- * Check if given header is content-type header and contains boundary
- * @return boundary or NULL
+ * Find attribute in header-value.
+ * If attribute_name is null, find get first value delimited by ';'
+ * @return content-type or NULL
  */
-char *__read_mime_part_header_boundary(struct mime_header *header) {
-    if (header == NULL || header->name == NULL || header->value == NULL)
-        return NULL;
+char *__read_mime_part_header_attribute(struct mime_header *header, const char *name, const char *attribute_name) {
 
-    if (strcasestr(header->name, "Content-Type") != NULL) {
-        char *p = strcasestr(header->value, "boundary=");
+    if (__is_mime_part_header(header, name) != NULL) {
+
+        //printf("%s %s> '%s'\n", name, attribute_name, header->value);
+
+        size_t len = strlen(header->value);
+        char *p;
+        if (attribute_name != NULL) {
+            p = strcasestr(header->value, attribute_name);
+            if (p != NULL) {
+                p += strlen(attribute_name) + 1;
+                if (p >= (header->value + len) || *(p - 1) != '=')
+                    p = NULL;
+            }
+        } else {
+            p = header->value;
+        }
+
         if (p != NULL) {
-            for (p += 9; *p == '"'; ++p);
-            size_t len = strlen(p);
-            char *ret = str_copy(p, strlen(p));
-            for (p = ret + (len - 1); p > ret && (is_whitespace(*p) || *p == '"'); p--)
-                *p = '\0';
-            printf("BOUNDARY> '%s'\n", ret);
+            char *end = strchr(p, ';');
+            if (end == NULL)
+                end = p + strlen(p);
+            char *ret = str_copy(p, end - p);
+            ltrim(ret, "\r\n\t\v\f \"");
+            rtrim(ret, "\r\n\t\v\f \"");
+            //printf("%s (%s)> '%s'\n", name, attribute_name, ret);
             return ret;
         }
     }
@@ -120,10 +143,32 @@ char *__read_mime_part_header_boundary(struct mime_header *header) {
 }
 
 /**
+ * Check if given header is content-type header.
+ * @return content-type or NULL
+ */
+char *__read_mime_part_header_content_type(struct mime_header *header) {
+    char *content_type = __read_mime_part_header_attribute(header, "Content-Type", NULL);
+    //if (content_type != NULL)
+    //    printf("CONTENT-TYPE> '%s'\n", content_type);
+    return content_type;
+}
+
+/**
+ * Check if given header is content-type header and contains boundary
+ * @return boundary or NULL
+ */
+char *__read_mime_part_header_boundary(struct mime_header *header) {
+    char *boundary = __read_mime_part_header_attribute(header, "Content-Type", "boundary");
+    //if (boundary != NULL)
+    //    printf("BOUNDARY> '%s'\n", boundary);
+    return boundary;
+}
+
+/**
  * Check if given line marks next multipart
  * @return 1 if it marks next, 0 if not
  */
-int is_boundary_next(char *line, char *boundary) {
+int is_boundary_next(const char *line, const char *boundary) {
 
     if (boundary == NULL)
         return 0;
@@ -139,7 +184,7 @@ int is_boundary_next(char *line, char *boundary) {
  * Check if given line marks end of multipart
  * @return 1 if it marks end, 0 if not
  */
-int is_boundary_end(char *line, char *boundary) {
+int is_boundary_end(const char *line, const char *boundary) {
 
     if (!is_boundary_next(line, boundary))
         return 0;
@@ -152,32 +197,53 @@ int is_boundary_end(char *line, char *boundary) {
 /**
  * Read mime-parts (checking multi-part messages)
  */
-void __read_mime_part(FILE *in) {
+void __read_mime_part(FILE *in, const char *read_until_boundary,
+                      void (*handle_message_line)(struct mime_header *mime_headers, int read_state, const char *line)) {
 
     struct char_buffer *buf_header = NULL;
-    struct mime_header *mime_header = NULL;
+    struct mime_header *mime_headers = NULL;
+    struct mime_header *curr_header = NULL;
     char *boundary = NULL;
     char *content_type = NULL;
 
     int reading_header = 1;
-    int part_count = -1;
     char *line;
     size_t len;
     while ((line = freadline(in)) != NULL) {
 
+        handle_message_line(
+                mime_headers,
+                reading_header ? MIME_MESSAGE_READ_HEADER : MIME_MESSAGE_READ_BODY,
+                line
+        );
+
         len = strlen(line);
+        if (is_boundary_end(line, read_until_boundary)) {
+            //printf("BOUNDARY END/EXIT> '%s'\n", read_until_boundary);
+            __mime_header_free(mime_headers);
+            freenn(boundary);
+            freenn(content_type);
+            return;
+        } else if (is_boundary_next(line, read_until_boundary)) {
+            //printf("BOUNDARY NEXT/EXIT> '%s'\n", read_until_boundary);
+            __mime_header_free(mime_headers);
+            freenn(boundary);
+            freenn(content_type);
+            __read_mime_part(in, read_until_boundary, handle_message_line);
+            return;
+        }
 
         if (reading_header && is_newline(line[0])) {
             //End of header block
             reading_header = 0;
             if (buf_header != NULL) { //Last header
-                if (mime_header != NULL)
-                    free(mime_header);
-                mime_header = __read_mime_part_header(buf_header);
+                curr_header = __read_mime_part_header(buf_header, curr_header);
+                if (mime_headers == NULL)
+                    mime_headers = curr_header;
                 if (content_type == NULL)
-                    content_type = __read_mime_part_header_content_type(mime_header);
+                    content_type = __read_mime_part_header_content_type(curr_header);
                 if (boundary == NULL)
-                    boundary = __read_mime_part_header_boundary(mime_header);
+                    boundary = __read_mime_part_header_boundary(curr_header);
                 char_buffer_free(buf_header);
             }
             continue;
@@ -188,24 +254,27 @@ void __read_mime_part(FILE *in) {
                 //Header value continues
                 buf_header = char_buffer_append(buf_header, line, len);
             else {
-                if (mime_header != NULL)
-                    free(mime_header);
-                mime_header = __read_mime_part_header(buf_header);
+                curr_header = __read_mime_part_header(buf_header, curr_header);
+                if (mime_headers == NULL)
+                    mime_headers = curr_header;
                 if (content_type == NULL)
-                    content_type = __read_mime_part_header_content_type(mime_header);
+                    content_type = __read_mime_part_header_content_type(curr_header);
                 if (boundary == NULL)
-                    boundary = __read_mime_part_header_boundary(mime_header);
+                    boundary = __read_mime_part_header_boundary(curr_header);
                 char_buffer_free(buf_header);
                 buf_header = char_buffer_append(NULL, line, len);
             }
         } else if (is_boundary_end(line, boundary)) {
-            printf("END> '%s'", line);
+            //printf("END> '%s'", line);
+            __mime_header_free(mime_headers);
+            mime_headers = NULL;
         } else if (is_boundary_next(line, boundary)) {
-            part_count++;
-            printf("NEXT> (%i) '%s'", part_count, line);
+            //printf("NEXT> '%s'", line);
+            __read_mime_part(in, boundary, handle_message_line);
         } else {
             //printf("BODY> (%s) '%s'", content_type, line);
         }
+
         free(line);
     }
 
@@ -214,11 +283,43 @@ void __read_mime_part(FILE *in) {
 }
 
 /**
+ * Read mime message from *in.
+ * Call *handle_message_line for each message-line
+ */
+void read_mime_message(FILE *in, void (*handle_message_line)(struct mime_header *mime_headers, int read_state,
+                                                             const char *line)) {
+    __read_mime_part(in, NULL, handle_message_line);
+    //printf("EOM\n");
+}
+
+
+/**
  *
  */
-void read_mime_message(FILE *in) {
-    __read_mime_part(in);
-    printf("EOM\n");
+char *get_header_value(struct mime_header *mime_headers, const char *name) {
+    struct mime_header *curr = mime_headers;
+    while (curr != NULL) {
+        if (__is_mime_part_header(curr, name) != NULL)
+            return curr->value;
+
+        curr = curr->next;
+    }
+    return NULL;
+}
+
+/**
+ *
+ */
+char *get_header_attribute(struct mime_header *mime_headers, const char *name, const char *attribute_name) {
+    struct mime_header *curr = mime_headers;
+    char *value;
+    while (curr != NULL) {
+        value = __read_mime_part_header_attribute(curr, name, attribute_name);
+        if (value != NULL)
+            return value;
+        curr = curr->next;
+    }
+    return NULL;
 }
 
 
