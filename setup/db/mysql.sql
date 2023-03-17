@@ -24,7 +24,7 @@ CREATE TABLE `WORD`
     `WORD`  varchar(254) DEFAULT NULL,
     `COUNT` int(11)      DEFAULT 0,
     PRIMARY KEY (`ID`),
-    KEY `IDX_WORD` (`WORD`)
+    KEY `IDX_WORD` (`WORD`(250))
 ) ENGINE MyISAM
   DEFAULT CHARSET = utf8mb4;
 
