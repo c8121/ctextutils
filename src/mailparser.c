@@ -39,7 +39,7 @@ void usage_message(int argc, char *argv[]) {
 /**
  *
  */
-void __handle_message_line(struct mime_header *mime_headers, int read_state, const char *line) {
+int __handle_message_line(struct mime_header *mime_headers, int read_state, const char *line) {
 
     if (read_state == MIME_MESSAGE_READ_BODY && curr_part_mime_headers != mime_headers) {
         curr_part_mime_headers = mime_headers;
@@ -50,6 +50,8 @@ void __handle_message_line(struct mime_header *mime_headers, int read_state, con
     }
 
     printf("%s", line);
+
+    return 1;
 }
 
 

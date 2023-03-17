@@ -133,8 +133,8 @@ char *__read_mime_part_header_attribute(struct mime_header *header, const char *
             if (end == NULL)
                 end = p + strlen(p);
             char *ret = str_copy(p, end - p);
-            ltrim(ret, "\r\n\t\v\f \"");
-            rtrim(ret, "\r\n\t\v\f \"");
+            ltrim(ret, "\r\n\t\v\f ");
+            rtrim(ret, "\r\n\t\v\f ");
             //printf("%s (%s)> '%s'\n", name, attribute_name, ret);
             return ret;
         }
@@ -159,8 +159,10 @@ char *__read_mime_part_header_content_type(struct mime_header *header) {
  */
 char *__read_mime_part_header_boundary(struct mime_header *header) {
     char *boundary = __read_mime_part_header_attribute(header, "Content-Type", "boundary");
-    //if (boundary != NULL)
-    //    printf("BOUNDARY> '%s'\n", boundary);
+    if (boundary != NULL) {
+        ltrim(boundary, "\r\n\t\v\f \"");
+        rtrim(boundary, "\r\n\t\v\f \"");
+    }
     return boundary;
 }
 
@@ -198,7 +200,7 @@ int is_boundary_end(const char *line, const char *boundary) {
  * Read mime-parts (checking multi-part messages)
  */
 void __read_mime_part(FILE *in, const char *read_until_boundary,
-                      void (*handle_message_line)(struct mime_header *mime_headers, int read_state, const char *line)) {
+                      int (*handle_message_line)(struct mime_header *mime_headers, int read_state, const char *line)) {
 
     struct char_buffer *buf_header = NULL;
     struct mime_header *mime_headers = NULL;
@@ -211,11 +213,12 @@ void __read_mime_part(FILE *in, const char *read_until_boundary,
     size_t len;
     while ((line = freadline(in)) != NULL) {
 
-        handle_message_line(
+        if (!handle_message_line(
                 mime_headers,
                 reading_header ? MIME_MESSAGE_READ_HEADER : MIME_MESSAGE_READ_BODY,
                 line
-        );
+        ))
+            return;
 
         len = strlen(line);
         if (is_boundary_end(line, read_until_boundary)) {
@@ -285,9 +288,10 @@ void __read_mime_part(FILE *in, const char *read_until_boundary,
 /**
  * Read mime message from *in.
  * Call *handle_message_line for each message-line
+ * Stop reading if *handle_message_line returns 0
  */
-void read_mime_message(FILE *in, void (*handle_message_line)(struct mime_header *mime_headers, int read_state,
-                                                             const char *line)) {
+void read_mime_message(FILE *in, int (*handle_message_line)(struct mime_header *mime_headers, int read_state,
+                                                            const char *line)) {
     __read_mime_part(in, NULL, handle_message_line);
     //printf("EOM\n");
 }
