@@ -58,7 +58,7 @@ void print_token(const char *token) {
         return;
 
     if (__match_regex != NULL) {
-        int ret = regexec(__match_regex, token, 0, NULL, 0);
+        int ret = regexec(__match_regex, token, 0, NULL, REG_EXTENDED);
         if (ret == REG_NOMATCH)
             return;
     }
