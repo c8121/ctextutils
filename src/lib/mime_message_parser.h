@@ -180,6 +180,7 @@ void __read_mime_part(FILE *in) {
                     boundary = __read_mime_part_header_boundary(mime_header);
                 char_buffer_free(buf_header);
             }
+            continue;
         }
 
         if (reading_header) {
@@ -190,6 +191,8 @@ void __read_mime_part(FILE *in) {
                 if (mime_header != NULL)
                     free(mime_header);
                 mime_header = __read_mime_part_header(buf_header);
+                if (content_type == NULL)
+                    content_type = __read_mime_part_header_content_type(mime_header);
                 if (boundary == NULL)
                     boundary = __read_mime_part_header_boundary(mime_header);
                 char_buffer_free(buf_header);
@@ -201,7 +204,7 @@ void __read_mime_part(FILE *in) {
             part_count++;
             printf("NEXT> (%i) '%s'", part_count, line);
         } else {
-            printf("BODY> (%s) '%s'", content_type, line);
+            //printf("BODY> (%s) '%s'", content_type, line);
         }
         free(line);
     }
