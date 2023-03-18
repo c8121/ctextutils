@@ -9,6 +9,8 @@ Text related utils.
     apt install libmailutils-dev
 
     apt install html2text
+    apt install catdoc
+    apt install pandoc
 
 ## Download & build
 
