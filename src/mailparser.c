@@ -17,8 +17,10 @@
  * Author: christian c8121 de
  */
 
+//to enable strcasestr, strptime, must be before including string.h
+#define _GNU_SOURCE
+
 #include <stdio.h>
-#include <stdlib.h>
 #include <sysexits.h>
 
 #include "lib/mime_message_parser.h"

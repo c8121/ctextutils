@@ -17,15 +17,21 @@
  * Author: christian c8121 de
  */
 
+//to enable strcasestr, strptime, must be before including string.h
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <sysexits.h>
 
-#include <mailutils/mime.h>
-
-#include "lib/mime_message_parser.h"
+#ifndef cJSON__h
 
 #include "3rd/cjson/cJSON.h"
 #include "3rd/cjson/cJSON.c"
+
+#endif
+
+#include "lib/mime_message_parser.h"
+#include "lib/mime_message_util.h"
 
 #include "submodules/cutils/src/cli_args.h"
 #include "submodules/cutils/src/time_util.h"
@@ -42,82 +48,6 @@ void usage_message(int argc, char *argv[]) {
     printf("%s\n", argv[0]);
 }
 
-/**
- *
- */
-char *decode_header_value(const char *v) {
-    char *result;
-    mu_rfc2047_decode("utf-8", v, &result);
-    if (result == NULL)
-        result = str_copy(v, strlen(v));
-    return result;
-}
-
-/**
- * In a list if addresses, find the delimiting comma.
- * Respects quoted Names.
- */
-char *__find_mail_address_delimiter(char *a) {
-
-    char *e = a + strlen(a);
-
-    int in_ignore_block = 0;
-    for (char *p = a; p < e; p++) {
-        if (in_ignore_block && (*p == '"' || *p == '>')) {
-            in_ignore_block = 0;
-            continue;
-        } else if ((*p == '"' || *p == '<')) {
-            in_ignore_block = 1;
-            continue;
-        } else if (in_ignore_block) {
-            continue;
-        } else if (*p == ',') {
-            return p;
-        }
-    }
-
-    return NULL;
-}
-
-/**
- * Create JSON Object containing names ans addresses
- */
-cJSON *get_addresses(char *address) {
-
-    cJSON *ret = cJSON_CreateArray();
-
-    char *e = address + strlen(address);
-    char *s = address;
-
-    while (s < e) {
-
-        cJSON *item = cJSON_CreateObject();
-        cJSON_AddItemToArray(ret, item);
-
-        char *p = __find_mail_address_delimiter(s);
-        if (p == NULL)
-            p = e;
-        *p = '\0';
-
-        char *adr = strchr(s, '<');
-        if (adr != NULL) {
-            *(adr++) = '\0';
-            ltrim(adr, " \r\n\t");
-            rtrim(adr, " \r\n\t>");
-            cJSON_AddStringToObject(item, "address", adr);
-
-            ltrim(s, " \r\n\t\"");
-            rtrim(s, " \r\n\t\"");
-            cJSON_AddStringToObject(item, "name", s);
-        } else {
-            cJSON_AddStringToObject(item, "address", s);
-        }
-
-        s = p + 1;
-    }
-
-    return ret;
-}
 
 /**
  *
@@ -143,12 +73,12 @@ int __handle_message_line(struct mime_header *mime_headers, int read_state, cons
         freenn(date);
 
         char *from = decode_header_value(get_header_attribute(mime_headers, "From", NULL));
-        cJSON *from_addr = get_addresses(from);
+        cJSON *from_addr = json_get_addresses_(from);
         if (from_addr != NULL && cJSON_GetArraySize(from_addr) > 0)
             cJSON_AddItemReferenceToObject(json, "From", cJSON_GetArrayItem(from_addr, 0));
 
         char *to = decode_header_value(get_header_attribute(mime_headers, "To", NULL));
-        cJSON *to_addr = get_addresses(to);
+        cJSON *to_addr = json_get_addresses_(to);
         cJSON_AddItemReferenceToObject(json, "To", to_addr);
 
         char *s = cJSON_Print(json);

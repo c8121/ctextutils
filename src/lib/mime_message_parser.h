@@ -20,9 +20,6 @@
 #ifndef CTEXTUTILS_MIME_MESSAGE_PARSER
 #define CTEXTUTILS_MIME_MESSAGE_PARSER
 
-//to enable strcasestr(...)
-#define __USE_GNU
-
 #define MIME_MESSAGE_READ_HEADER 1
 #define MIME_MESSAGE_READ_BODY 2
 
