@@ -58,7 +58,7 @@ void print_token(const char *token) {
         return;
 
     if (__match_regex != NULL) {
-        int ret = regexec(__match_regex, token, 0, NULL, REG_EXTENDED);
+        int ret = regexec(__match_regex, token, 0, NULL, 0);
         if (ret == REG_NOMATCH)
             return;
     }
@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
     opt = cli_get_opt_idx("-match", argc, argv);
     if (opt > 0) {
         __match_regex = malloc(sizeof(regex_t));
-        int ret = regcomp(__match_regex, argv[opt], 0);
+        int ret = regcomp(__match_regex, argv[opt], REG_EXTENDED);
         if (ret != 0)
             fail(EX_USAGE, "Invalid regex");
     }
