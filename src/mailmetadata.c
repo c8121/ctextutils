@@ -53,6 +53,10 @@ char *decode_header_value(const char *v) {
     return result;
 }
 
+/**
+ * In a list if addresses, find the delimiting comma.
+ * Respects quoted Names.
+ */
 char *__find_mail_address_delimiter(char *a) {
 
     char *e = a + strlen(a);
@@ -75,6 +79,9 @@ char *__find_mail_address_delimiter(char *a) {
     return NULL;
 }
 
+/**
+ * Create JSON Object containing names ans addresses
+ */
 cJSON *get_addresses(char *address) {
 
     cJSON *ret = cJSON_CreateArray();
