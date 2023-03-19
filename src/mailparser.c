@@ -35,6 +35,7 @@ struct mime_header *curr_part_mime_headers = NULL;
 void usage_message(int argc, char *argv[]) {
     printf("USAGE:\n");
     printf("%s\n", argv[0]);
+    printf("Reads message from stdin.\n");
 }
 
 

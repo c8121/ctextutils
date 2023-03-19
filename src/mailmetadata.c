@@ -45,7 +45,7 @@ struct mime_header *curr_part_mime_headers = NULL;
  */
 void usage_message(int argc, char *argv[]) {
     printf("USAGE:\n");
-    printf("%s\n", argv[0]);
+    printf("%s <file> \n", argv[0]);
 }
 
 
@@ -103,5 +103,22 @@ int main(int argc, char *argv[]) {
         return EX_OK;
     }
 
-    read_mime_message(stdin, &__handle_message_line);
+    if (cli_get_arg(1, argc, argv) == NULL) {
+        usage_message(argc, argv);
+        return EX_USAGE;
+    } else {
+        char *file_name = cli_get_arg(1, argc, argv);
+        if (!file_exists(file_name))
+            fail(EX_IOERR, "File not found");
+
+        FILE *fp = fopen(file_name, "r");
+        if (fp == NULL) {
+            fprintf(stderr, "Failed to open file: %s\n", file_name);
+            return 0;
+        }
+
+        read_mime_message(fp, &__handle_message_line);
+
+        fclose(fp);
+    }
 }
