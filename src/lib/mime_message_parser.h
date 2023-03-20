@@ -22,6 +22,7 @@
 
 #define MIME_MESSAGE_READ_HEADER 1
 #define MIME_MESSAGE_READ_BODY 2
+#define MIME_MESSAGE_READ_BOUNDARY 3
 
 #include <string.h>
 
@@ -210,21 +211,23 @@ void __read_mime_part(FILE *in, const char *read_until_boundary,
     size_t len;
     while ((line = freadline(in)) != NULL) {
 
-        if (!handle_message_line(
-                mime_headers,
-                reading_header ? MIME_MESSAGE_READ_HEADER : MIME_MESSAGE_READ_BODY,
-                line
-        ))
+        int is_bnd_end = is_boundary_end(line, read_until_boundary);
+        int is_bnd_next = !is_bnd_end ? is_boundary_next(line, read_until_boundary) : 0;
+        int state = reading_header
+                    ? MIME_MESSAGE_READ_HEADER
+                    : ((is_bnd_end || is_bnd_next) ? MIME_MESSAGE_READ_BOUNDARY : MIME_MESSAGE_READ_BODY);
+
+        if (!handle_message_line(mime_headers, state, line))
             return;
 
         len = strlen(line);
-        if (is_boundary_end(line, read_until_boundary)) {
+        if (is_bnd_end) {
             //printf("BOUNDARY END/EXIT> '%s'\n", read_until_boundary);
             __mime_header_free(mime_headers);
             freenn(boundary);
             freenn(content_type);
             return;
-        } else if (is_boundary_next(line, read_until_boundary)) {
+        } else if (is_bnd_next) {
             //printf("BOUNDARY NEXT/EXIT> '%s'\n", read_until_boundary);
             __mime_header_free(mime_headers);
             freenn(boundary);
@@ -323,5 +326,19 @@ char *get_header_attribute(struct mime_header *mime_headers, const char *name, c
     return NULL;
 }
 
+/**
+ *
+ */
+char *get_attachment_filename(struct mime_header *mime_headers) {
+    char *filename = get_header_attribute(mime_headers, "content-disposition", "filename");
+    if (filename == NULL)
+        filename = get_header_attribute(mime_headers, "content-type", "name");
+
+    if (filename == NULL) {
+        //TODO: Create filename based on content-type.
+    }
+
+    return filename;
+}
 
 #endif //CTEXTUTILS_TOKENIZER
