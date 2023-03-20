@@ -78,8 +78,8 @@ void __mysql_create_queries() {
     );
 
     __mysql_document = __mysql_create_query(
-            "SELECT ID FROM DOCUMENT WHERE ID=?;",
-            "INSERT INTO DOCUMENT(ID) VALUES(?);",
+            "SELECT ID FROM DOCUMENT WHERE USERID=?;",
+            "INSERT INTO DOCUMENT(USERID) VALUES(?);",
             ""
     );
 
@@ -226,12 +226,13 @@ unsigned long __mysql_get_document_count() {
 /**
  * @return id if found, -1 on error, 0 if no data found
  */
-unsigned long __mysql_get_document_id(unsigned long doc_id) {
+unsigned long __mysql_get_document_id(const char *doc_user_id) {
 
     if (!mysql_util_prepare_stmt(mysql, &__mysql_document->get_stmt, __mysql_document->get_sql))
         fail(EX_IOERR, "Failed to prepare statement");
 
-    MYSQL_BIND *p = mysql_util_create_bind(MYSQL_TYPE_LONG, (void *) &doc_id);
+    MYSQL_BIND *p = mysql_util_create_bind(MYSQL_TYPE_STRING, (void *) doc_user_id);
+    p->buffer_length = strnlen(doc_user_id, INDEXER_MAX_LENGTH_DOC_ID);
 
     unsigned long id = 0;
     MYSQL_BIND *r = mysql_util_create_bind(MYSQL_TYPE_LONG, &id);
@@ -253,16 +254,17 @@ unsigned long __mysql_get_document_id(unsigned long doc_id) {
 /**
  * @return id on success, -1 on fail
  */
-unsigned long __mysql_add_document(unsigned long doc_id) {
+unsigned long __mysql_add_document(const char *doc_user_id) {
 
     if (!mysql_util_prepare_stmt(mysql, &__mysql_document->add_stmt, __mysql_document->add_sql))
         fail(EX_IOERR, "Failed to prepare statement");
 
-    MYSQL_BIND *p = mysql_util_create_bind(MYSQL_TYPE_LONG, (void *) &doc_id);
+    MYSQL_BIND *p = mysql_util_create_bind(MYSQL_TYPE_STRING, (void *) doc_user_id);
+    p->buffer_length = strnlen(doc_user_id, INDEXER_MAX_LENGTH_DOC_ID);
 
     unsigned long id = mysql_util_execute_insert(mysql, __mysql_document->add_stmt, p);
     if (id == -1)
-        fail(EX_IOERR, "Failed to execute statement");
+        fail(EX_IOERR, "Failed to execute add statement");
 
     mysql_stmt_free_result(__mysql_document->add_stmt);
     free(p);
@@ -353,10 +355,11 @@ int __mysql_update_document_word_count(unsigned long document_id, unsigned long 
 /**
  * @return 1 on success, 0 on fail
  */
-int fulltext_db_add_word(unsigned long doc_id, const char *word) {
+int fulltext_db_add_word(const char *doc_user_id, const char *word) {
 
-    if (__mysql_get_document_id(doc_id) < 1)
-        __mysql_add_document(doc_id);
+    unsigned long doc_id = __mysql_get_document_id(doc_user_id);
+    if (doc_id == 0)
+        __mysql_add_document(doc_user_id);
 
     unsigned long word_id = __mysql_get_word_id(word);
     if (word_id == 0)

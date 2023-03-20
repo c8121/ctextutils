@@ -29,7 +29,7 @@
 
 #define DEFAULT_CONFIG_FILE "./config/default-config"
 
-unsigned long doc_id = 0;
+char *doc_id = NULL;
 
 struct db_config db;
 
@@ -65,9 +65,9 @@ int main(int argc, char *argv[]) {
         return EX_USAGE;
     }
 
-    doc_id = atoll(argv[1]);
-    if (doc_id < 1)
-        fail(EX_USAGE, "Invalid document id (<1)");
+    doc_id = argv[1];
+    if (is_null_or_empty(doc_id))
+        fail(EX_USAGE, "Document id cannot be null or empty");
 
     memset(&db, 0, sizeof(struct db_config));
     read_config_file_from_cli_arg("-config", argc, argv, 1, DEFAULT_CONFIG_FILE,

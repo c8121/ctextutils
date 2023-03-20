@@ -20,6 +20,7 @@
 #ifndef CTEXTUTILS_INDEXER
 #define CTEXTUTILS_INDEXER
 
+#define INDEXER_MAX_LENGTH_DOC_ID 254
 #define INDEXER_MAX_LENGTH_WORD 254
 
 #include <stdio.h>
@@ -33,7 +34,7 @@ int fulltext_db_connect(const char *host, const char *user, const char *pwd,
 
 void fulltext_db_disconnect();
 
-int fulltext_db_add_word(unsigned long doc_id, const char *word);
+int fulltext_db_add_word(const char *doc_user_id, const char *word);
 
 struct fulltext_id_list *fulltext_db_get_documents(int word_count, const char *words[]);
 
@@ -128,7 +129,7 @@ void fulltext_id_list_free(struct fulltext_id_list *item) {
 /**
  *
  */
-int fulltext_add_word(unsigned long doc_id, const char *word) {
+int fulltext_add_word(const char *doc_id, const char *word) {
     return fulltext_db_add_word(doc_id, word);
 }
 
