@@ -359,7 +359,7 @@ int fulltext_db_add_word(const char *doc_user_id, const char *word) {
 
     unsigned long doc_id = __mysql_get_document_id(doc_user_id);
     if (doc_id == 0)
-        __mysql_add_document(doc_user_id);
+        doc_id = __mysql_add_document(doc_user_id);
 
     unsigned long word_id = __mysql_get_word_id(word);
     if (word_id == 0)
