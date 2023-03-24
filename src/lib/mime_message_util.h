@@ -70,7 +70,7 @@ char *__find_mail_address_delimiter(char *a) {
 /**
  * Create JSON Object containing names ans addresses
  */
-cJSON *json_get_addresses_(char *address) {
+cJSON *json_get_addresses(char *address) {
 
     cJSON *ret = cJSON_CreateArray();
 

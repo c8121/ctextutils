@@ -73,12 +73,12 @@ int __handle_message_line(struct mime_header *mime_headers, int read_state, cons
         freenn(date);
 
         char *from = decode_header_value(get_header_attribute(mime_headers, "From", NULL));
-        cJSON *from_addr = json_get_addresses_(from);
+        cJSON *from_addr = json_get_addresses(from);
         if (from_addr != NULL && cJSON_GetArraySize(from_addr) > 0)
             cJSON_AddItemReferenceToObject(json, "From", cJSON_GetArrayItem(from_addr, 0));
 
         char *to = decode_header_value(get_header_attribute(mime_headers, "To", NULL));
-        cJSON *to_addr = json_get_addresses_(to);
+        cJSON *to_addr = json_get_addresses(to);
         cJSON_AddItemReferenceToObject(json, "To", to_addr);
 
         char *s = cJSON_Print(json);
