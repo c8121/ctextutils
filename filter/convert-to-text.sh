@@ -35,6 +35,15 @@ text/plain)
   cat "$file"
   ;;
 
+text/csv)
+  cat "$file"
+  ;;
+
+message/rfc822)
+  cmd="$(dirname "$0")"/cat-mime-message.sh
+  "$cmd" "$file"
+  ;;
+
 *)
   echo "Cannot convert $mimeType" >&2
   ;;
