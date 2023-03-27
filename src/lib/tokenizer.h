@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <sysexits.h>
 
-#include "../submodules/cutils/src/util.h"
+#include "../../dep/cutils/src/util.h"
 
 /**
  *

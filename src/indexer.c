@@ -24,8 +24,8 @@
 #include "lib/fulltext_index_mysql.h"
 #include "lib/tokenizer.h"
 
-#include "submodules/cutils/src/db_util.h"
-#include "submodules/cutils/src/config_file.h"
+#include "../dep/cutils/src/db_util.h"
+#include "../dep/cutils/src/config_file.h"
 
 #define DEFAULT_CONFIG_FILE "./config/default-config"
 

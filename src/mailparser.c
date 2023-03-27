@@ -27,8 +27,8 @@
 #include "lib/quoted_printable.h"
 #include "lib/base64.h"
 
-#include "submodules/cutils/src/cli_args.h"
-#include "submodules/cutils/src/file_util.h"
+#include "../dep/cutils/src/cli_args.h"
+#include "../dep/cutils/src/file_util.h"
 
 #define MAX_OUTFILE_NAME_LENGTH 4096
 

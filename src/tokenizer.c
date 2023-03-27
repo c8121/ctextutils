@@ -25,7 +25,7 @@
 
 #include "lib/tokenizer.h"
 
-#include "submodules/cutils/src/cli_args.h"
+#include "../dep/cutils/src/cli_args.h"
 
 #define DEFAULT_MAX_TOKEN_LENGTH 128
 #define DEFAULT_TOKEN_SEPARATOR " ";
