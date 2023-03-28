@@ -24,8 +24,8 @@
 
 #ifndef cJSON__h
 
-#include "../3rd/cjson/cJSON.h"
-#include "../3rd/cjson/cJSON.c"
+#include "cJSON/cJSON.h"
+#include "cJSON/cJSON.c"
 
 #endif
 

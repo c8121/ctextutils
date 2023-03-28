@@ -22,6 +22,7 @@
 #ifndef CTEXTUTILS_HTML_ENTITIES
 #define CTEXTUTILS_HTML_ENTITIES
 
+#include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 

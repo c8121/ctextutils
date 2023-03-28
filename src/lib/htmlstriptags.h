@@ -22,7 +22,7 @@
 
 #include <ctype.h>
 
-#include "../../dep/cutils/src/char_util.h"
+#include "cutils/src/char_util.h"
 
 #define HTML_STRIP_TAGS_INGORE_CONTENT_OF "!-- script style"
 

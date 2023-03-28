@@ -20,7 +20,7 @@
 #ifndef CTEXTUTILS_BASE64
 #define CTEXTUTILS_BASE64
 
-#include "../../dep/cutils/src/char_util.h"
+#include "cutils/src/char_util.h"
 
 /**
  *

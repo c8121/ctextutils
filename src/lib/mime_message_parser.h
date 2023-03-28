@@ -26,9 +26,9 @@
 
 #include <string.h>
 
-#include "../../dep/cutils/src/util.h"
-#include "../../dep/cutils/src/file_util.h"
-#include "../../dep/cutils/src/char_buffer_util.h"
+#include "cutils/src/util.h"
+#include "cutils/src/file_util.h"
+#include "cutils/src/char_buffer_util.h"
 
 struct mime_header {
     char *name;

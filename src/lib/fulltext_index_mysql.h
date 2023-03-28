@@ -28,9 +28,9 @@
 
 #include <mysql/mysql.h>
 
-#include "../../dep/cutils/src/mysql_util.h"
-#include "../../dep/cutils/src/char_util.h"
-#include "../../dep/cutils/src/util.h"
+#include "cutils/src/mysql_util.h"
+#include "cutils/src/char_util.h"
+#include "cutils/src/util.h"
 
 void *mysql = NULL;
 

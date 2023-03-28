@@ -27,7 +27,7 @@
 #include <stdlib.h>
 #include <sysexits.h>
 
-#include "../../dep/cutils/src/sort_util.h"
+#include "cutils/src/sort_util.h"
 
 int fulltext_db_connect(const char *host, const char *user, const char *pwd,
                         const char *db, unsigned int port);

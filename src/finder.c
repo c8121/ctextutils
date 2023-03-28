@@ -23,8 +23,8 @@
 #include "lib/fulltext_index.h"
 #include "lib/fulltext_index_mysql.h"
 
-#include "../dep/cutils/src/db_util.h"
-#include "../dep/cutils/src/config_file.h"
+#include "cutils/src/db_util.h"
+#include "cutils/src/config_file.h"
 
 #define DEFAULT_CONFIG_FILE "./config/default-config"
 

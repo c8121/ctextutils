@@ -18,8 +18,6 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <sysexits.h>
 
 #include "lib/htmlstriptags.h"
 

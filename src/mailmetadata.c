@@ -25,16 +25,16 @@
 
 #ifndef cJSON__h
 
-#include "../dep/cJSON/cJSON.h"
-#include "../dep/cJSON/cJSON.c"
+#include "cJSON/cJSON.h"
+#include "cJSON/cJSON.c"
 
 #endif
 
 #include "lib/mime_message_parser.h"
 #include "lib/mime_message_util.h"
 
-#include "../dep/cutils/src/cli_args.h"
-#include "../dep/cutils/src/time_util.h"
+#include "cutils/src/cli_args.h"
+#include "cutils/src/time_util.h"
 
 #define CHARSET "utf-8"
 
