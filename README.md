@@ -16,4 +16,5 @@ Text related utils.
 
     git clone --recursive https://github.com/c8121/ctextutils.git
     cd ctextutils
+    ./pull-dependencies.sh
     ./build.sh
