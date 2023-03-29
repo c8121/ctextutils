@@ -256,10 +256,17 @@ void __read_mime_part(FILE *in, const char *read_until_boundary,
         }
 
         if (reading_header) {
-            if (buf_header == NULL || is_whitespace(line[0]))
-                //Header value continues
+            if (buf_header == NULL) {
                 buf_header = char_buffer_append(buf_header, line, len);
-            else {
+            } else if (line[0] == '\t') {
+                //Header value continues, keep tab
+                buf_header = char_buffer_append(buf_header, line, len);
+            } else if (is_whitespace(line[0])) {
+                //Header value continues, remove whitespace, unfold
+                buf_header->curr->s[buf_header->curr->len-1] = '\0';
+                buf_header->curr->len -= 1;
+                buf_header = char_buffer_append(buf_header, line + 1, len - 1);
+            } else {
                 curr_header = __read_mime_part_header(buf_header, curr_header);
                 if (mime_headers == NULL)
                     mime_headers = curr_header;
