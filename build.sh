@@ -21,13 +21,11 @@ if [[ ! -d "$binDir" ]]; then
   mkdir -p "$binDir"
 fi
 
-INCLUDE_PATH=$BASE/dep
-
 cd "$BASE" || exit
-gcc -Wall -I"$INCLUDE_PATH" -o "$binDir/tokenizer" "$sourceDir/tokenizer.c"
-gcc -Wall -I"$INCLUDE_PATH" -o "$binDir/htmlstriptags" "$sourceDir/htmlstriptags.c"
-gcc -Wall -I"$INCLUDE_PATH" -o "$binDir/htmlentitiesdecode" "$sourceDir/htmlentitiesdecode.c"
-gcc -Wall -I"$INCLUDE_PATH" -o "$binDir/mailparser" "$sourceDir/mailparser.c"
-gcc -Wall -I"$INCLUDE_PATH" -o "$binDir/mailmetadata" "$sourceDir/mailmetadata.c" -lmailutils
-gcc -Wall -I"$INCLUDE_PATH" -o "$binDir/indexer" "$sourceDir/indexer.c" -lmysqlclient -lm
-gcc -Wall -I"$INCLUDE_PATH" -o "$binDir/finder" "$sourceDir/finder.c" -lmysqlclient -lm
+gcc -Wall -I"$dependenciesDir" -o "$binDir/tokenizer" "$sourceDir/tokenizer.c"
+gcc -Wall -I"$dependenciesDir" -o "$binDir/htmlstriptags" "$sourceDir/htmlstriptags.c"
+gcc -Wall -I"$dependenciesDir" -o "$binDir/htmlentitiesdecode" "$sourceDir/htmlentitiesdecode.c"
+gcc -Wall -I"$dependenciesDir" -o "$binDir/mailparser" "$sourceDir/mailparser.c"
+gcc -Wall -I"$dependenciesDir" -o "$binDir/mailmetadata" "$sourceDir/mailmetadata.c" -lmailutils
+gcc -Wall -I"$dependenciesDir" -o "$binDir/indexer" "$sourceDir/indexer.c" -lmysqlclient -lm
+gcc -Wall -I"$dependenciesDir" -o "$binDir/finder" "$sourceDir/finder.c" -lmysqlclient -lm

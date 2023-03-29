@@ -22,7 +22,7 @@
 #include <sysexits.h>
 
 
-#include "../../src/submodules/cutils/src/sort_util.h"
+#include "cutils/src/sort_util.h"
 
 int __curr_id = 0;
 int __curr_num = 0;
