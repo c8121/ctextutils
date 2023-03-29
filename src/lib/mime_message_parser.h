@@ -76,7 +76,7 @@ struct mime_header *__read_mime_part_header(struct char_buffer *header, struct m
         for (p++; is_whitespace(*p); ++p);
         mime_header->value = str_copy(p, len - (p - s));
     } else {
-        mime_header->name = str_copy(s, p - s);
+        mime_header->name = str_copy(s, len);
         mime_header->value = NULL;
     }
     free(s);
