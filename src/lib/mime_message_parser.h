@@ -96,16 +96,19 @@ struct mime_header *__is_mime_part_header(struct mime_header *header, const char
     if (header == NULL || header->name == NULL || header->value == NULL)
         return NULL;
 
-    if (strcasestr(header->name, name) != NULL) {
+    if (strlen(header->name) != strlen(name))
+        return NULL;
+
+    if (strcasestr(header->name, name) == header->name)
         return header;
-    }
+
     return NULL;
 }
 
 /**
  * Find attribute in header-value.
  * If attribute_name is null, find get first value delimited by ';'
- * @return content-type or NULL
+ * @return Header value or NULL
  */
 char *__read_mime_part_header_attribute(struct mime_header *header, const char *name, const char *attribute_name) {
 
