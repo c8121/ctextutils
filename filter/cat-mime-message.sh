@@ -18,7 +18,7 @@ fi
 
 temp_dir=$(mktemp -d)
 
-$PARSER_COMMAND "$temp_dir" <"$file"
+$PARSER_COMMAND "$temp_dir" <"$file" >&2
 find "$temp_dir" -type f -print0 | while IFS= read -r -d '' content_file; do
 
   #ls -l "$content_file"
