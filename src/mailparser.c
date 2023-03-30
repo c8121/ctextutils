@@ -100,10 +100,10 @@ int __handle_message_line(struct mime_header *mime_headers, int read_state, cons
         curr_part_mime_headers = mime_headers;
 
         char *content_type = get_header_attribute(mime_headers, "content-type", NULL);
-        fprintf(stderr, "PART, content-type='%s'\n", content_type);
+        //fprintf(stderr, "PART, content-type='%s'\n", content_type);
 
         char *encoding = get_header_attribute(mime_headers, "Content-Transfer-Encoding", NULL);
-        fprintf(stderr, "      encoding='%s'\n", encoding);
+        //fprintf(stderr, "      encoding='%s'\n", encoding);
 
         if (content_type != NULL && strcasestr(content_type, "multipart/") == NULL) {
             if (encoding != NULL) {
@@ -117,7 +117,7 @@ int __handle_message_line(struct mime_header *mime_headers, int read_state, cons
                 decode_print = &decode_8bit_print;
             }
 
-            char *orig_filename = get_attachment_filename(mime_headers);
+            char *orig_filename = get_attachment_filename(mime_headers, "unnamed");
 
             char filename[MAX_OUTFILE_NAME_LENGTH];
             char *ext = file_ext(orig_filename, 10, "");
@@ -129,9 +129,14 @@ int __handle_message_line(struct mime_header *mime_headers, int read_state, cons
             } while (file_exists(filename));
 
 
-            printf("Create file: %s\n", filename);
+            printf("Create file: %s (%s, %s, '%s')\n",
+                   filename, content_type,
+                   encoding != NULL ? encoding : "none",
+                   orig_filename != NULL ? orig_filename : "none"
+            );
             curr_file = fopen(filename, "w");
             freenn(ext);
+            freenn(orig_filename);
         }
 
     }

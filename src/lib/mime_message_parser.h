@@ -30,6 +30,8 @@
 #include "cutils/src/file_util.h"
 #include "cutils/src/char_buffer_util.h"
 
+#include "content_types.h"
+
 struct mime_header {
     char *name;
     char *value;
@@ -265,7 +267,7 @@ void __read_mime_part(FILE *in, const char *read_until_boundary,
                 buf_header = char_buffer_append(buf_header, line, len);
             } else if (is_whitespace(line[0])) {
                 //Header value continues, remove whitespace, unfold
-                buf_header->curr->s[buf_header->curr->len-1] = '\0';
+                buf_header->curr->s[buf_header->curr->len - 1] = '\0';
                 buf_header->curr->len -= 1;
                 buf_header = char_buffer_append(buf_header, line + 1, len - 1);
             } else {
@@ -339,18 +341,35 @@ char *get_header_attribute(struct mime_header *mime_headers, const char *name, c
 }
 
 /**
+ * Get the filename from headers content-disposition or content-type
  *
+ * @param create_default If not null, a default name will created.
+ *                       A matching extension will be determined from content type.
+ *
+ * Caller must free result;
  */
-char *get_attachment_filename(struct mime_header *mime_headers) {
+char *get_attachment_filename(struct mime_header *mime_headers, const char *default_name) {
+
+    char *ret = NULL;
+
     char *filename = get_header_attribute(mime_headers, "content-disposition", "filename");
     if (filename == NULL)
         filename = get_header_attribute(mime_headers, "content-type", "name");
 
-    if (filename == NULL) {
-        //TODO: Create filename based on content-type.
+    if (filename == NULL && default_name != NULL) {
+
+        char *content_type = get_header_attribute(mime_headers, "content-type", NULL);
+        const char *ext = get_extension_by_content_type(content_type);
+        if (ext != NULL)
+            ret = str_cat(default_name, ext);
+
+    } else {
+        ret = str_copy(filename, strlen(filename));
+        ltrim(ret, " \"\r\n\t\f");
+        rtrim(ret, " \"\r\n\t\f");
     }
 
-    return filename;
+    return ret;
 }
 
 #endif //CTEXTUTILS_TOKENIZER
