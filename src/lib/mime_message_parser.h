@@ -116,12 +116,14 @@ char *__read_mime_part_header_attribute(struct mime_header *header, const char *
         size_t len = strlen(header->value);
         char *p;
         if (attribute_name != NULL) {
-            p = strcasestr(header->value, attribute_name);
+            char *find = str_cat(attribute_name, "=");
+            p = strcasestr(header->value, find);
             if (p != NULL) {
-                p += strlen(attribute_name) + 1;
-                if (p >= (header->value + len) || *(p - 1) != '=')
+                p += strlen(find);
+                if (p >= (header->value + len))
                     p = NULL;
             }
+            free(find);
         } else {
             p = header->value;
         }
