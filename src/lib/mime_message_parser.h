@@ -76,7 +76,7 @@ struct mime_header *__read_mime_part_header(struct char_buffer *header, struct m
         for (p++; is_whitespace(*p); ++p);
         mime_header->value = str_copy(p, len - (p - s));
     } else {
-        mime_header->name = str_copy(s, p - s);
+        mime_header->name = str_copy(s, len);
         mime_header->value = NULL;
     }
     free(s);
@@ -96,16 +96,19 @@ struct mime_header *__is_mime_part_header(struct mime_header *header, const char
     if (header == NULL || header->name == NULL || header->value == NULL)
         return NULL;
 
-    if (strcasestr(header->name, name) != NULL) {
+    if (strlen(header->name) != strlen(name))
+        return NULL;
+
+    if (strcasestr(header->name, name) == header->name)
         return header;
-    }
+
     return NULL;
 }
 
 /**
  * Find attribute in header-value.
  * If attribute_name is null, find get first value delimited by ';'
- * @return content-type or NULL
+ * @return Header value or NULL
  */
 char *__read_mime_part_header_attribute(struct mime_header *header, const char *name, const char *attribute_name) {
 
@@ -255,10 +258,17 @@ void __read_mime_part(FILE *in, const char *read_until_boundary,
         }
 
         if (reading_header) {
-            if (buf_header == NULL || is_whitespace(line[0]))
-                //Header value continues
+            if (buf_header == NULL) {
                 buf_header = char_buffer_append(buf_header, line, len);
-            else {
+            } else if (line[0] == '\t') {
+                //Header value continues, keep tab
+                buf_header = char_buffer_append(buf_header, line, len);
+            } else if (is_whitespace(line[0])) {
+                //Header value continues, remove whitespace, unfold
+                buf_header->curr->s[buf_header->curr->len-1] = '\0';
+                buf_header->curr->len -= 1;
+                buf_header = char_buffer_append(buf_header, line + 1, len - 1);
+            } else {
                 curr_header = __read_mime_part_header(buf_header, curr_header);
                 if (mime_headers == NULL)
                     mime_headers = curr_header;

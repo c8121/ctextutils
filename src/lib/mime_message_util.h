@@ -33,6 +33,8 @@
  *
  */
 char *decode_header_value(const char *v) {
+    if (v == NULL)
+        return NULL;
     char *result;
     mu_rfc2047_decode("utf-8", v, &result);
     if (result == NULL)
@@ -72,6 +74,9 @@ char *__find_mail_address_delimiter(char *a) {
  */
 cJSON *json_get_addresses(char *address) {
 
+    if (address == NULL)
+        return NULL;
+
     cJSON *ret = cJSON_CreateArray();
 
     char *e = address + strlen(address);
@@ -106,7 +111,6 @@ cJSON *json_get_addresses(char *address) {
 
     return ret;
 }
-
 
 
 #endif //CTEXTUTILS_MIME_MESSAGE_UTIL
