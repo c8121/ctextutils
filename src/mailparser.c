@@ -40,6 +40,8 @@ char *base_file_name = "message-content";
 int file_num = 0;
 FILE *curr_file = NULL;
 
+int num_alternative = 0;
+
 void (*decode_print)(const char *line) = NULL;
 
 /**
@@ -102,10 +104,20 @@ int __handle_message_line(struct mime_header *mime_headers, int read_state, cons
         char *content_type = get_header_attribute(mime_headers, "content-type", NULL);
         //fprintf(stderr, "PART, content-type='%s'\n", content_type);
 
+        if (mime_headers->parent != NULL) {
+            char *parent_content_type = get_header_attribute(mime_headers->parent, "content-type", NULL);
+            if (strcasestr(parent_content_type, "multipart/alternative") != NULL)
+                num_alternative++;
+            else
+                num_alternative = 0;
+        } else {
+            num_alternative = 0;
+        }
+
         char *encoding = get_header_attribute(mime_headers, "Content-Transfer-Encoding", NULL);
         //fprintf(stderr, "      encoding='%s'\n", encoding);
 
-        if (content_type != NULL && strcasestr(content_type, "multipart/") == NULL) {
+        if (num_alternative < 2 && content_type != NULL && strcasestr(content_type, "multipart/") == NULL) {
             if (encoding != NULL) {
                 if (strcasestr(encoding, "base64") != NULL)
                     decode_print = &decode_base64_print;
@@ -135,10 +147,13 @@ int __handle_message_line(struct mime_header *mime_headers, int read_state, cons
                    orig_filename != NULL ? orig_filename : "none"
             );
             curr_file = fopen(filename, "w");
+
             freenn(ext);
             freenn(orig_filename);
         }
 
+        freenn(encoding);
+        freenn(content_type);
     }
 
     if (decode_print != NULL)
