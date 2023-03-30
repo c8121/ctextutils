@@ -42,6 +42,10 @@ FILE *curr_file = NULL;
 
 int num_alternative = 0;
 
+char **ignore_contentype;
+int ignore_contentype_first = -1;
+int ignore_contentype_last = -1;
+
 void (*decode_print)(const char *line) = NULL;
 
 /**
@@ -49,9 +53,10 @@ void (*decode_print)(const char *line) = NULL;
  */
 void usage_message(int argc, char *argv[]) {
     printf("USAGE:\n");
-    printf("%s <output directory> [-n <base file name>]\n", argv[0]);
+    printf("%s <output directory> [-n <base file name>] [-ignore <contentype (part of name)> <...>]\n", argv[0]);
     printf("Reads message from stdin.\n");
 }
+
 
 /**
  *
@@ -86,6 +91,22 @@ void decode_8bit_print(const char *line) {
 }
 
 /**
+ * @return 1 if to be ignored, 0 otherwise
+ */
+int __ignore_content_type(const char *content_type) {
+
+    if (content_type == NULL)
+        return 1;
+
+    for (int i = ignore_contentype_first; i <= ignore_contentype_last; i++) {
+        if (strcasestr(content_type, ignore_contentype[i]) != NULL)
+            return 1;
+    }
+
+    return 0;
+}
+
+/**
  *
  */
 int __handle_message_line(struct mime_header *mime_headers, int read_state, const char *line) {
@@ -104,56 +125,60 @@ int __handle_message_line(struct mime_header *mime_headers, int read_state, cons
         char *content_type = get_header_attribute(mime_headers, "content-type", NULL);
         //fprintf(stderr, "PART, content-type='%s'\n", content_type);
 
-        if (mime_headers->parent != NULL) {
-            char *parent_content_type = get_header_attribute(mime_headers->parent, "content-type", NULL);
-            if (strcasestr(parent_content_type, "multipart/alternative") != NULL)
-                num_alternative++;
-            else
-                num_alternative = 0;
-        } else {
-            num_alternative = 0;
-        }
-
-        char *encoding = get_header_attribute(mime_headers, "Content-Transfer-Encoding", NULL);
-        //fprintf(stderr, "      encoding='%s'\n", encoding);
-
-        if (num_alternative < 2 && content_type != NULL && strcasestr(content_type, "multipart/") == NULL) {
-            if (encoding != NULL) {
-                if (strcasestr(encoding, "base64") != NULL)
-                    decode_print = &decode_base64_print;
-                else if (strcasestr(encoding, "quoted-printable") != NULL)
-                    decode_print = &decode_qp_print;
-                else if (strcasestr(encoding, "7bit") != NULL)
-                    decode_print = &decode_7bit_print;
+        if (!__ignore_content_type(content_type)) {
+            if (mime_headers->parent != NULL) {
+                char *parent_content_type = get_header_attribute(mime_headers->parent, "content-type", NULL);
+                if (strcasestr(parent_content_type, "multipart/alternative") != NULL)
+                    num_alternative++;
+                else
+                    num_alternative = 0;
             } else {
-                decode_print = &decode_8bit_print;
+                num_alternative = 0;
             }
 
-            char *orig_filename = get_attachment_filename(mime_headers, "unnamed");
+            char *encoding = get_header_attribute(mime_headers, "Content-Transfer-Encoding", NULL);
+            //fprintf(stderr, "      encoding='%s'\n", encoding);
 
-            char filename[MAX_OUTFILE_NAME_LENGTH];
-            char *ext = file_ext(orig_filename, 10, "");
+            if (num_alternative < 2 && content_type != NULL && strcasestr(content_type, "multipart/") == NULL) {
+                if (encoding != NULL) {
+                    if (strcasestr(encoding, "base64") != NULL)
+                        decode_print = &decode_base64_print;
+                    else if (strcasestr(encoding, "quoted-printable") != NULL)
+                        decode_print = &decode_qp_print;
+                    else if (strcasestr(encoding, "7bit") != NULL)
+                        decode_print = &decode_7bit_print;
+                } else {
+                    decode_print = &decode_8bit_print;
+                }
 
-            do {
-                snprintf(filename, MAX_OUTFILE_NAME_LENGTH, "%s/%s%i.%s", out_dir, base_file_name, ++file_num, ext);
-                if (file_num > 1000)
-                    fail(EX_IOERR, "Counted to %i, still no free filename... giving up");
-            } while (file_exists(filename));
+                char *orig_filename = get_attachment_filename(mime_headers, "unnamed");
+
+                char filename[MAX_OUTFILE_NAME_LENGTH];
+                char *ext = file_ext(orig_filename, 10, "");
+
+                do {
+                    snprintf(filename, MAX_OUTFILE_NAME_LENGTH, "%s/%s%i.%s", out_dir, base_file_name, ++file_num, ext);
+                    if (file_num > 1000)
+                        fail(EX_IOERR, "Counted to %i, still no free filename... giving up");
+                } while (file_exists(filename));
 
 
-            printf("Create file: %s (%s, %s, '%s')\n",
-                   filename, content_type,
-                   encoding != NULL ? encoding : "none",
-                   orig_filename != NULL ? orig_filename : "none"
-            );
-            curr_file = fopen(filename, "w");
+                printf("Create file: %s (%s, %s, '%s')\n",
+                       filename, content_type,
+                       encoding != NULL ? encoding : "none",
+                       orig_filename != NULL ? orig_filename : "none"
+                );
+                curr_file = fopen(filename, "w");
 
-            freenn(ext);
-            freenn(orig_filename);
+                freenn(ext);
+                freenn(orig_filename);
+            }
+
+            freenn(encoding);
+            freenn(content_type);
+        } else {
+            printf("Ignoring part of content-type '%s'\n", content_type);
         }
-
-        freenn(encoding);
-        freenn(content_type);
     }
 
     if (decode_print != NULL)
@@ -190,6 +215,18 @@ int main(int argc, char *argv[]) {
     int i = cli_get_opt_idx("-n", argc, argv);
     if (i > 0)
         base_file_name = argv[i];
+
+    ignore_contentype = argv;
+    ignore_contentype_first = cli_get_opt_idx("-ignore", argc, argv);
+    if (ignore_contentype_first > 0) {
+        ignore_contentype_last = argc - 1;
+        for (i = ignore_contentype_first; i < argc; i++) {
+            if (argv[i][0] == '-') {
+                ignore_contentype_last = i - 1;
+                break;
+            }
+        }
+    }
 
     read_mime_message(stdin, &__handle_message_line);
 
