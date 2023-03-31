@@ -20,6 +20,7 @@
 #ifndef CTEXTUTILS_INDEXER_MYSQL
 #define CTEXTUTILS_INDEXER_MYSQL
 
+#include <string.h>
 #include <stdio.h>
 #include <sysexits.h>
 #include <math.h>
@@ -386,10 +387,15 @@ struct fulltext_id_list *get_word_ids(const char *word) {
 
     int len = strnlen(word, INDEXER_MAX_LENGTH_WORD);
     char find[len + 2];
-    snprintf(find, len + 2, "%s%c", word, '%');
+    if (strcasestr(__mysql_find_word->get_sql, " LIKE ") != NULL) {
+        snprintf(find, len + 2, "%s%c", word, '%');
+        len += 1;
+    } else {
+        snprintf(find, len + 1, "%s", word);
+    }
 
     MYSQL_BIND *p = mysql_util_create_bind(MYSQL_TYPE_STRING, (void *) &find);
-    p->buffer_length = len + 1;
+    p->buffer_length = len;
 
     unsigned long id = 0;
     unsigned long count = 0;
