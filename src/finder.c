@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <sysexits.h>
+#include <libgen.h>
 
 #include "lib/fulltext_index.h"
 #include "lib/fulltext_index_mysql.h"
@@ -26,7 +27,7 @@
 #include "cutils/src/db_util.h"
 #include "cutils/src/config_file.h"
 
-#define DEFAULT_CONFIG_FILE "./config/default-config"
+#define DEFAULT_CONFIG_FILE "../config/default-config"
 
 struct db_config db;
 
@@ -57,8 +58,8 @@ int main(int argc, char *argv[]) {
     }
 
     memset(&db, 0, sizeof(struct db_config));
-    read_config_file_from_cli_arg("-config", argc, argv, 1, DEFAULT_CONFIG_FILE,
-                                  &apply_config);
+    char *default_config_file = get_config_file_path(argc, argv, DEFAULT_CONFIG_FILE);
+    read_config_file_from_cli_arg("-config", argc, argv, 1, default_config_file, &apply_config);
 
     if (!fulltext_db_connect(db.host, db.user, db.password, db.db, db.port))
         return 0;
