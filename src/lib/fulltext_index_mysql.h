@@ -97,7 +97,7 @@ void __mysql_create_queries() {
     );
 
     __mysql_find_word = __mysql_create_query(
-            "SELECT ID, COUNT FROM WORD WHERE WORD LIKE ?;",
+            "SELECT ID, COUNT FROM WORD WHERE WORD=?;",
             "",
             ""
     );
