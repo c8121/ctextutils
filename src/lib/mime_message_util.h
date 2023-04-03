@@ -44,25 +44,34 @@ char *decode_header_value(const char *v) {
 
 
 /**
- * In a list if addresses, find the delimiting comma.
+ * In a list if addresses, find the delimiter.
  * Respects quoted Names.
  */
-char *__find_mail_address_delimiter(char *a) {
+char *__find_mail_address_delimiter(char *a, const char *delimiters) {
 
     char *e = a + strlen(a);
 
-    int in_ignore_block = 0;
+    char ignore_block_delimiter = 0;
     for (char *p = a; p < e; p++) {
-        if (in_ignore_block && (*p == '"' || *p == '>')) {
-            in_ignore_block = 0;
+
+        if (ignore_block_delimiter != 0 && *p == ignore_block_delimiter) {
+            //End of delimited block
+            ignore_block_delimiter = 0;
             continue;
-        } else if ((*p == '"' || *p == '<')) {
-            in_ignore_block = 1;
-            continue;
-        } else if (in_ignore_block) {
-            continue;
-        } else if (*p == ',') {
-            return p;
+        } else {
+            char *delimiter = strchr(delimiters, *p);
+            if (*p == '"' && delimiter == NULL) {
+                ignore_block_delimiter = '"';
+                continue;
+            } else if (*p == '<' && delimiter == NULL) {
+                ignore_block_delimiter = '>';
+                continue;
+            } else if (ignore_block_delimiter != 0) {
+                //In delimited block
+                continue;
+            } else if (delimiter != NULL) {
+                return p;
+            }
         }
     }
 
@@ -70,12 +79,21 @@ char *__find_mail_address_delimiter(char *a) {
 }
 
 /**
- * Create JSON Object containing names ans addresses
+ * Create JSON Object containing names and addresses.
+ * Tries to handle several types of header formats, for example:
+ *    To: Name, Name2 <email@address>
+ *    To: Name, Name2 <email@address>; ...
+ *    To: Name; Name; Name;
  */
 cJSON *json_get_addresses(char *address) {
 
     if (address == NULL)
         return NULL;
+
+    const char *list_delimiters = ",\0"; //RFC defined limiter for multiple addresses
+    if (strchr(address, '@') == NULL)
+        list_delimiters = ",;"; //Only names found (no addresses), accept additional delimiter;
+
 
     cJSON *ret = cJSON_CreateArray();
 
@@ -87,23 +105,31 @@ cJSON *json_get_addresses(char *address) {
         cJSON *item = cJSON_CreateObject();
         cJSON_AddItemToArray(ret, item);
 
-        char *p = __find_mail_address_delimiter(s);
+        char *p = __find_mail_address_delimiter(s, list_delimiters);
         if (p == NULL)
             p = e;
         *p = '\0';
 
-        char *adr = strchr(s, '<');
+        char *adr = __find_mail_address_delimiter(s, "<("); //Split 'Name <address>'
         if (adr != NULL) {
             *(adr++) = '\0';
-            ltrim(adr, " \r\n\t");
-            rtrim(adr, " \r\n\t>");
+            char *max = __find_mail_address_delimiter(adr, ">)");
+            if (max != NULL)
+                *max = '\0';
+            ltrim(adr, " \r\n\t<(");
+            rtrim(adr, " \r\n\t>)");
             cJSON_AddStringToObject(item, "address", adr);
 
-            ltrim(s, " \r\n\t\"");
-            rtrim(s, " \r\n\t\"");
+            ltrim(s, " \r\n\t\"'");
+            rtrim(s, " \r\n\t\"'");
             cJSON_AddStringToObject(item, "name", s);
         } else {
-            cJSON_AddStringToObject(item, "address", s);
+            ltrim(s, " \r\n\t\"'");
+            rtrim(s, " \r\n\t\"'");
+            if (strchr(address, '@') != NULL)
+                cJSON_AddStringToObject(item, "address", s);
+            else
+                cJSON_AddStringToObject(item, "name", s);
         }
 
         s = p + 1;
