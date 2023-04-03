@@ -59,24 +59,37 @@ int __handle_message_line(struct mime_header *mime_headers, int read_state, cons
 
         cJSON *json = cJSON_CreateObject();
 
-        cJSON_AddStringToObject(json, "ID", get_header_attribute(mime_headers, "Message-ID", NULL));
+        cJSON_AddStringToObject(json, "ID", get_header_value(mime_headers, "Message-ID"));
 
-        char *subject = decode_header_value(get_header_attribute(mime_headers, "Subject", NULL));
+        char *subject = decode_header_value(get_header_value(mime_headers, "Subject"));
         cJSON_AddStringToObject(json, "Subject", subject);
         freenn(subject);
 
-        char *date = convert_valid_time_string(get_header_attribute(mime_headers, "Date", NULL));
+        char *date = convert_valid_time_string(get_header_value(mime_headers, "Date"));
         cJSON_AddStringToObject(json, "Date", date);
         freenn(date);
 
-        char *from = decode_header_value(get_header_attribute(mime_headers, "From", NULL));
+        char *from = decode_header_value(get_header_value(mime_headers, "From"));
         cJSON *from_addr = json_get_addresses(from);
-        if (from_addr != NULL && cJSON_GetArraySize(from_addr) > 0)
-            cJSON_AddItemReferenceToObject(json, "From", cJSON_GetArrayItem(from_addr, 0));
+        if (from_addr != NULL) {
+            cJSON *item;
+            cJSON_ArrayForEach(item, from_addr)
+            {
+                cJSON *address = cJSON_GetObjectItem(item, "address");
+                if (address != NULL && !is_null_or_empty(address->valuestring)) {
+                    cJSON_AddItemReferenceToObject(json, "From", item);
+                    break;
+                }
+            }
+        }
 
-        char *to = decode_header_value(get_header_attribute(mime_headers, "To", NULL));
+        char *to = decode_header_value(get_header_value(mime_headers, "To"));
         cJSON *to_addr = json_get_addresses(to);
         cJSON_AddItemReferenceToObject(json, "To", to_addr);
+
+        char *cc = decode_header_value(get_header_value(mime_headers, "Cc"));
+        cJSON *cc_addr = json_get_addresses(cc);
+        cJSON_AddItemReferenceToObject(json, "Cc", cc_addr);
 
         char *s = cJSON_Print(json);
         printf("%s\n", s);
