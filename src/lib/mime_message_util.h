@@ -90,10 +90,7 @@ cJSON *json_get_addresses(char *address) {
     if (address == NULL)
         return NULL;
 
-    const char *list_delimiters = ",\0"; //RFC defined limiter for multiple addresses
-    if (strchr(address, '@') == NULL)
-        list_delimiters = ",;"; //Only names found (no addresses), accept additional delimiter;
-
+    fprintf(stderr, "Parse '%s'\n", address);
 
     cJSON *ret = cJSON_CreateArray();
 
@@ -105,27 +102,30 @@ cJSON *json_get_addresses(char *address) {
         cJSON *item = cJSON_CreateObject();
         cJSON_AddItemToArray(ret, item);
 
-        char *p = __find_mail_address_delimiter(s, list_delimiters);
+        //comma = RFC defined limiter for multiple addresses
+        char *p = __find_mail_address_delimiter(s, ",;");
         if (p == NULL)
             p = e;
         *p = '\0';
 
-        char *adr = __find_mail_address_delimiter(s, "<("); //Split 'Name <address>'
+        char *adr = __find_mail_address_delimiter(s, "<"); //Split 'Name <address>'
+        if (adr == NULL)
+            adr = __find_mail_address_delimiter(s, "("); //Split 'Name (address)'
         if (adr != NULL) {
             *(adr++) = '\0';
             char *max = __find_mail_address_delimiter(adr, ">)");
             if (max != NULL)
                 *max = '\0';
-            ltrim(adr, " \r\n\t<(");
-            rtrim(adr, " \r\n\t>)");
+            ltrim(adr, " \r\n\t;,<(");
+            rtrim(adr, " \r\n\t.;,>)");
             cJSON_AddStringToObject(item, "address", adr);
 
-            ltrim(s, " \r\n\t\"'");
-            rtrim(s, " \r\n\t\"'");
+            ltrim(s, " \r\n\t;,\"'");
+            rtrim(s, " \r\n\t;,\"'");
             cJSON_AddStringToObject(item, "name", s);
         } else {
-            ltrim(s, " \r\n\t\"'");
-            rtrim(s, " \r\n\t\"'");
+            ltrim(s, " \r\n\t;,\"'");
+            rtrim(s, " \r\n\t.;,\"'");
             if (strchr(address, '@') != NULL)
                 cJSON_AddStringToObject(item, "address", s);
             else
