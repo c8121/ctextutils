@@ -318,7 +318,7 @@ void read_mime_message(FILE *in, int (*handle_message_line)(struct mime_header *
 
 
 /**
- *
+ * Find header by name
  */
 char *get_header_value(struct mime_header *mime_headers, const char *name) {
     struct mime_header *curr = mime_headers;

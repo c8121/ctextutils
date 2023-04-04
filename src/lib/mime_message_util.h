@@ -30,7 +30,7 @@
 #endif
 
 /**
- *
+ * Decode values which was rfc2047 encoded (=?<encoding?...?=)
  */
 char *decode_header_value(const char *v) {
     if (v == NULL)
