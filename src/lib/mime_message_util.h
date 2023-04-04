@@ -35,7 +35,7 @@
 char *decode_header_value(const char *v) {
     if (v == NULL)
         return NULL;
-    char *result;
+    char *result = NULL;
     mu_rfc2047_decode("utf-8", v, &result);
     if (result == NULL)
         result = str_copy(v, strlen(v));
