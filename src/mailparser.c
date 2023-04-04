@@ -21,6 +21,7 @@
 #include <sysexits.h>
 
 #include "lib/mime_message_parser.h"
+#include "lib/mime_message_util.h"
 #include "lib/quoted_printable.h"
 #include "lib/base64.h"
 
@@ -115,6 +116,14 @@ int __handle_message_line(struct mime_header *mime_headers, int read_state, cons
         if (curr_file != NULL) {
             fclose(curr_file);
             curr_file = NULL;
+        }
+
+        if (curr_part_mime_headers == NULL) {
+            //Main headers
+            char *subject = decode_header_value(get_header_value(mime_headers, "Subject"));
+            if (subject != NULL)
+                printf("%s\n\n", subject);
+            freenn(subject);
         }
 
         curr_part_mime_headers = mime_headers;
