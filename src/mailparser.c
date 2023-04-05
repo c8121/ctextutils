@@ -169,10 +169,10 @@ int __handle_message_line(struct mime_header *mime_headers, int read_state, cons
                 } while (file_exists(filename));
 
 
-                printf("Create file: %s (%s, %s, '%s')\n",
-                       filename, content_type,
-                       encoding != NULL ? encoding : "none",
-                       orig_filename != NULL ? orig_filename : "none"
+                fprintf(stderr, "Create file: %s (%s, %s, '%s')\n",
+                        filename, content_type,
+                        encoding != NULL ? encoding : "none",
+                        orig_filename != NULL ? orig_filename : "none"
                 );
                 curr_file = fopen(filename, "w");
 
@@ -183,7 +183,7 @@ int __handle_message_line(struct mime_header *mime_headers, int read_state, cons
             freenn(encoding);
             freenn(content_type);
         } else {
-            printf("Ignoring part of content-type '%s'\n", content_type);
+            fprintf(stderr, "Ignoring part of content-type '%s'\n", content_type);
         }
     }
 
