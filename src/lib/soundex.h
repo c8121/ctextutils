@@ -97,8 +97,6 @@ char *soundex(const char *in, size_t len, const char *mapping[]) {
     char *out = malloc(5);
     snprintf(out, 5, "%c000", toupper(in[0]));
 
-    printf("%i %c\n", in[0], in[0]);
-
     int o = 1;
     for (int i = 1; i < len && o < 4;) {
         int match = 0;
