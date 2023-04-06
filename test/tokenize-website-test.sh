@@ -8,5 +8,5 @@ for url in $urls; do
   wget -O - "$url" |
     "$BASE"/../bin/htmlstriptags |
     "$BASE"/../bin/htmlentitiesdecode |
-    "$BASE"/../bin/tokenizer -d $' .,;:()[]{}\\/-=<>"+?!%_|$&@\r\n\t\v\f'
+    "$BASE"/../bin/tokenizer -d $' .,;:()[]{}\\/-=<>"+?!%_|$&@\r\n\t\v\f' -soundex de
 done

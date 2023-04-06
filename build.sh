@@ -23,6 +23,7 @@ fi
 
 cd "$BASE" || exit
 gcc -Wall -I"$dependenciesDir" -o "$binDir/tokenizer" "$sourceDir/tokenizer.c"
+gcc -g -Wall -I"$dependenciesDir" -o "$binDir/soundex" "$sourceDir/soundex.c"
 gcc -Wall -I"$dependenciesDir" -o "$binDir/htmlstriptags" "$sourceDir/htmlstriptags.c"
 gcc -Wall -I"$dependenciesDir" -o "$binDir/htmlentitiesdecode" "$sourceDir/htmlentitiesdecode.c"
 gcc -Wall -D_GNU_SOURCE -I"$dependenciesDir" -o "$binDir/mailparser" "$sourceDir/mailparser.c" -lmailutils

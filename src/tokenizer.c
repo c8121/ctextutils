@@ -24,6 +24,7 @@
 #include <regex.h>
 
 #include "lib/tokenizer.h"
+#include "lib/soundex.h"
 
 #include "cutils/src/cli_args.h"
 
@@ -37,6 +38,7 @@ size_t __max_token_length = DEFAULT_MAX_TOKEN_LENGTH;
 size_t __min_token_length = 1;
 int __lcase = 0;
 regex_t *__match_regex = NULL;
+void *__soundex_mapping = NULL;
 
 /**
  *
@@ -46,6 +48,7 @@ void usage_message(int argc, char *argv[]) {
     printf("%s [-help] [-d <delimiters>] [-m <max token length>] [-n min token length] \\\n", argv[0]);
     printf("        [-lcase] \\\n");
     printf("        [-match <regex>] \\\n");
+    printf("        [-soundex <mapping>] \\\n");
     printf("        [-s <separator>]\n");
 }
 
@@ -66,7 +69,12 @@ void print_token(const char *token) {
     if (__tokenizer_token_count++ > 0)
         printf("%s", __tokenizer_separator);
 
-    if (__lcase) {
+    if (__soundex_mapping != NULL) {
+        char *out = soundex(token, strlen(token), (const char **) __soundex_mapping);
+        if (out != NULL)
+            printf("%s", out);
+        freenn(out);
+    } else if (__lcase) {
         for (const char *p = token; *p; ++p)
             printf("%c", tolower(p[0]));
     } else {
@@ -119,6 +127,13 @@ int main(int argc, char *argv[]) {
         int ret = regcomp(__match_regex, argv[opt], REG_EXTENDED);
         if (ret != 0)
             fail(EX_USAGE, "Invalid regex");
+    }
+
+    opt = cli_get_opt_idx("-soundex", argc, argv);
+    if (opt > 0) {
+        __soundex_mapping = soundex_mapping(argv[opt]);
+        if (__soundex_mapping == NULL)
+            fail(EX_USAGE, "Unknown soundex mapping (try EN or DE for example)");
     }
 
     tokenize(stdin, delimiters, __max_token_length, &print_token);
