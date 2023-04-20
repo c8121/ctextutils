@@ -23,6 +23,7 @@
 #include <ctype.h>
 
 #include "cutils/src/char_util.h"
+#include "unicode_simplify.h"
 
 const char *EN_MAPPING[] = {
         "B", "1",
@@ -94,15 +95,17 @@ char *soundex(const char *in, size_t len, const char *mapping[]) {
     if (is_null_or_empty(in))
         return NULL;
 
+    char *simplified = unicode_simplify(in, 0, len);
+
     char *out = malloc(5);
-    snprintf(out, 5, "%c000", toupper(in[0]));
+    snprintf(out, 5, "%c000", toupper(simplified[0]));
 
     int o = 1;
     for (int i = 1; i < len && o < 4;) {
         int match = 0;
         for (int c = 0; *mapping[c] != '\0'; c += 2) {
             int mlen = strlen(mapping[c]);
-            if (strncasecmp(in + i, mapping[c], mlen) == 0) {
+            if (strncasecmp(simplified + i, mapping[c], mlen) == 0) {
                 out[o++] = *mapping[c + 1];
                 i += mlen;
                 match = 1;
@@ -112,6 +115,8 @@ char *soundex(const char *in, size_t len, const char *mapping[]) {
         if (!match)
             i++;
     }
+
+    free(simplified);
 
     return out;
 
