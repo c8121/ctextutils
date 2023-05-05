@@ -480,7 +480,8 @@ void __unicode_simplify(unsigned long int codepoint, char *out) {
 }
 
 /**
- *
+ * Find unicode sequences and replace each by a single char.
+ * See UNICODE_SIMPLIFY_MAPPING
  */
 char *unicode_simplify(const char *s, size_t offset, size_t len) {
     return unicode_iterate(s, offset, len, &__unicode_simplify);

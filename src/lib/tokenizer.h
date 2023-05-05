@@ -28,7 +28,7 @@
 #include "cutils/src/util.h"
 
 /**
- *
+ * @return 1 if one of <code>delimiters</code> is equal to <code>c</code>, 0 otherwise
  */
 int is_delimiter(int c, const char *delimiters) {
     char *d = (char *) delimiters;
@@ -41,7 +41,7 @@ int is_delimiter(int c, const char *delimiters) {
 }
 
 /**
- *
+ * @return 1 if <code>c</code> is a printable character, 0 otherwise
  */
 int is_printable(int c) {
     if (c > 31)

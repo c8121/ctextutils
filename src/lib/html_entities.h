@@ -13,8 +13,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//TODO: Needs cleanup & revision
-
 /*
  * Author: christian c8121 de
  */

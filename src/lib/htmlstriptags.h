@@ -24,7 +24,7 @@
 
 #include "cutils/src/char_util.h"
 
-#define HTML_STRIP_TAGS_INGORE_CONTENT_OF "!-- script style"
+#define HTML_STRIP_TAGS_IGNORE_CONTENT_OF "!-- script style"
 
 
 /**
@@ -32,10 +32,10 @@
  */
 int ignore_content(char *tag_name) {
 
-    const char *p = HTML_STRIP_TAGS_INGORE_CONTENT_OF;
+    const char *p = HTML_STRIP_TAGS_IGNORE_CONTENT_OF;
     int len = strlen(p);
 
-    while (p - HTML_STRIP_TAGS_INGORE_CONTENT_OF < len) {
+    while (p - HTML_STRIP_TAGS_IGNORE_CONTENT_OF < len) {
 
         const char *e = strchr(p, ' ');
         if (e == NULL)

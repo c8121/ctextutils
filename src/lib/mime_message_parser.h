@@ -378,4 +378,4 @@ char *get_attachment_filename(struct mime_header *mime_headers, const char *defa
     return ret;
 }
 
-#endif //CTEXTUTILS_TOKENIZER
+#endif //CTEXTUTILS_MIME_MESSAGE_PARSER
