@@ -15,6 +15,8 @@
 
 /*
  * Author: christian c8121 de
+ *
+ * Read mime-message file and create JSON Object containing metadata (From, To, Subject...)
  */
 
 #include <stdio.h>

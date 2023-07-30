@@ -15,6 +15,8 @@
 
 /*
  * Author: christian c8121 de
+ *
+ * Find documents in fulltext-index database containing given words.
  */
 
 #include <stdio.h>

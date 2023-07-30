@@ -122,7 +122,7 @@ char *html_entity_get(const char *name) {
 }
 
 /**
- *
+ * Read from {@code in}, find html entities (&...) and write decoded to {@code out}
  */
 void html_entities_decode(FILE *in, FILE *out) {
 

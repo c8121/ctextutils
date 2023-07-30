@@ -15,6 +15,8 @@
 
 /*
  * Author: christian c8121 de
+ *
+ * Split text to words
  */
 
 #include <stdio.h>

@@ -15,6 +15,8 @@
 
 /*
  * Author: christian c8121 de
+ *
+ * Very simple utility to extract plain text from html.
  */
 
 #include <stdio.h>

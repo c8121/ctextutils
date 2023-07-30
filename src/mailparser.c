@@ -15,6 +15,8 @@
 
 /*
  * Author: christian c8121 de
+ *
+ * Extract parts from mime-messages.
  */
 
 #include <stdio.h>
@@ -51,7 +53,7 @@ void (*decode_print)(const char *line) = NULL;
  */
 void usage_message(int argc, char *argv[]) {
     printf("USAGE:\n");
-    printf("%s <output directory> [-n <base file name>] [-ignore <contentype (part of name)> <...>]\n", argv[0]);
+    printf("%s <output directory> [-n <base file name>] [-ignore <content-type (part of name)> <...>]\n", argv[0]);
     printf("Reads message from stdin.\n");
 }
 

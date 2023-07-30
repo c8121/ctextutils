@@ -15,6 +15,8 @@
 
 /*
  * Author: christian c8121 de
+ *
+ * Read from stdin, replace html entities (&...)
  */
 
 #include <stdio.h>

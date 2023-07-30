@@ -15,6 +15,9 @@
 
 /*
  * Author: christian c8121 de
+ *
+ * Tokenize text from stdin (split at whitespace), write words to fulltext-index database.
+ * Word will be related to given document id.
  */
 
 #include <stdio.h>

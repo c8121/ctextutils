@@ -15,6 +15,8 @@
 
 /*
  * Author: christian c8121 de
+ *
+ * Soundex implementation
  */
 
 #include <stdio.h>
